@@ -94,6 +94,8 @@ class Units(commands.GroupCog, name="unit"):
         for talent in unit_talents:
             if talent[2] == "Talent":
                 talent_name, object_name = await database.translate_talent_name(self.bot.db, talent[3])
+                if talent_name == None:
+                    talent_name = object_name
                 if talent[5] == "Template" or talent[5] == "Unknown":
                     starting_talent_string += talent_name + " " + str(talent[4]) + "\n"
                 elif talent[5] == "Trained":
