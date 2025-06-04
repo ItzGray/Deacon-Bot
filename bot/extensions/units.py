@@ -139,8 +139,7 @@ class Units(commands.GroupCog, name="unit"):
         
         if trained_power_string != "":
             embed.add_field(name="Trainable Powers", value=trained_power_string, inline=True)
-        
-        embed.add_field(name="\u200b", value="\u200b", inline=True)
+            embed.add_field(name="\u200b", value="\u200b", inline=True)
 
         if unit_image:
             try:
