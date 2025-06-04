@@ -1,7 +1,9 @@
 from typing import List, Optional, Literal
 from fuzzywuzzy import process, fuzz
 from operator import attrgetter
+from pathlib import Path
 import re
+import os
 from random import choice
 
 import discord
@@ -24,48 +26,20 @@ INNER JOIN locale_en ON locale_en.id == pets.name
 WHERE pets.real_name == ? COLLATE NOCASE
 """
 
-SPELL_NAME_ID_QUERY = """
-SELECT locale_en.data FROM spells
-INNER JOIN locale_en ON locale_en.id == spells.name
-WHERE spells.real_name == ?
+TALENT_NAME_ID_QUERY_1 = """
+SELECT * FROM indiv_pet_talents WHERE indiv_pet_talents.pet == ?
 """
 
-EGG_NAME_ID_QUERY = """
-SELECT locale_en.data FROM spells
-INNER JOIN locale_en ON locale_en.id == spells.name
-WHERE spells.real_name == ?
+TALENT_NAME_ID_QUERY_2 = """
+SELECT * FROM pet_talents WHERE pet_talents.id == ?
 """
 
-SET_BONUS_NAME_QUERY = """
-SELECT locale_en.data FROM set_bonuses
-INNER JOIN locale_en ON locale_en.id == set_bonuses.name
-WHERE set_bonuses.id == ?
+POWER_NAME_ID_QUERY_1 = """
+SELECT * FROM indiv_pet_powers WHERE indiv_pet_powers.pet == ?
 """
 
-FIND_ITEMCARD_OBJECT_NAME_QUERY = """
-SELECT * FROM spells
-WHERE spells.template_id == ? COLLATE NOCASE
-"""
-
-TALENT_NAME_ID_QUERY = """
-SELECT * FROM talents
-INNER JOIN locale_en ON locale_en.id == talents.talent
-WHERE talents.pet == ?
-"""
-
-EGG_NAME_ID_QUERY = """
-SELECT data FROM locale_en
-WHERE locale_en.id == ?
-"""
-
-FIND_PETS_WITH_FILTER_QUERY = """
-SELECT * FROM pets
-INNER JOIN locale_en ON locale_en.id == pets.name
-WHERE locale_en.data COLLATE NOCASE IN ({placeholders})
-AND (? = 'Any' OR pets.school = ?)
-AND (? = -1 OR pets.wow_factor = ?)
-AND (? IS NULL OR pets.exclusive = ?)
-COLLATE NOCASE
+POWER_NAME_ID_QUERY_2 = """
+SELECT * FROM pet_powers WHERE pet_powers.id == ?
 """
 
 def remove_indices(lst, indices):
@@ -79,160 +53,128 @@ class Pets(commands.GroupCog, name="pet"):
         async with self.bot.db.execute(FIND_PET_QUERY, (name,)) as cursor:
             return await cursor.fetchall()
         
-    async def fetch_egg_name(self, name: str) -> List[tuple]:
-        async with self.bot.db.execute(EGG_NAME_ID_QUERY, (name,)) as cursor:
-            return await cursor.fetchall()
-        
     async def fetch_object_name(self, name: str) -> List[tuple]:
         name_bytes = name.encode('utf-8')
         async with self.bot.db.execute(FIND_OBJECT_NAME_QUERY, (name_bytes,)) as cursor:
             return await cursor.fetchall()
-        
-    async def fetch_itemcard_object_name(self, id: str) -> List[tuple]:
-        async with self.bot.db.execute(FIND_ITEMCARD_OBJECT_NAME_QUERY, (id,)) as cursor:
-            return await cursor.fetchall()
-        
-    async def fetch_pets_with_filter(self, pets: List[str], school: Optional[str] = "Any", wow: Optional[int] = -1, exclusive: Optional[bool] = None, return_row=False):
-        if isinstance(pets, str):
-            pets = [pets]
-
-        results = []
-        
-        school_val = (database._SCHOOLS_STR.index(school) + 2) if school != "Any" else None
-
-        for chunk in database.sql_chunked(pets, 900):  # Stay under SQLite's limit
-            placeholders = database._make_placeholders(len(chunk))
-            query = FIND_PETS_WITH_FILTER_QUERY.format(placeholders=placeholders)
-
-            args = (
-                *chunk,
-                school, school_val,
-                wow, wow,
-                exclusive, exclusive
-            )
-
-            async with self.bot.db.execute(query, args) as cursor:
-                rows = await cursor.fetchall()
-
-            if return_row:
-                results.extend(rows)
-            else:
-                results.extend(row[-1] for row in rows)
-
-        return results
 
     
     async def fetch_pet_talents(self, id: str) -> List[tuple]:
-        async with self.bot.db.execute(TALENT_NAME_ID_QUERY, (id,)) as cursor:
-            return await cursor.fetchall()
-    
-    async def fetch_pet_cards(self, pet: int) -> List[str]:
-        card_onames = []
-        async with self.bot.db.execute(
-            "SELECT * FROM pet_cards WHERE pet == ?", (pet,)
-        ) as cursor:
+        talents = []
+        async with self.bot.db.execute(TALENT_NAME_ID_QUERY_1, (id,)) as cursor:
             async for row in cursor:
-                card_onames.append(row[-1])
+                talents.append(str(row[2]))
 
-        card_names = []
-        for card in card_onames:
-            async with self.bot.db.execute(SPELL_NAME_ID_QUERY, (card,)) as cursor:
-                card_name = await cursor.fetchone()
+        final_talents = []
+        for talent in range(len(talents)):
+            async with self.bot.db.execute(TALENT_NAME_ID_QUERY_2, (talents[talent],)) as cursor:
+                final_talents.append(await cursor.fetchall())
+        
+        return final_talents
+        
+    async def fetch_pet_powers(self, id: str) -> List[tuple]:
+        powers = []
+        async with self.bot.db.execute(POWER_NAME_ID_QUERY_1, (id,)) as cursor:
+            async for row in cursor:
+                powers.append(str(row[2]))
 
-            object_name = card.decode()
-
-            card_names.append(f"{card_name[0]} ({object_name})")
-
-        return card_names
-    
-    async def fetch_set_bonus_name(self, set_id: int) -> Optional[tuple]:
-        async with self.bot.db.execute(SET_BONUS_NAME_QUERY, (set_id,)) as cursor:
-            return (await cursor.fetchone())[0]
-    
-    
-    def format_card_string(self, cards) -> str:
-        res = ""
-        for card in cards:
-            res += card + "\n"
-
-        return res
+        final_powers = []
+        for power in range(len(powers)):
+            async with self.bot.db.execute(POWER_NAME_ID_QUERY_2, (powers[power],)) as cursor:
+                final_powers.append(await cursor.fetchall())
+        
+        return final_powers
 
     async def build_pet_embed(self, row):
         pet_id = row[0]
         real_name = row[2].decode("utf-8")
-        set_bonus = row[3]
-        rarity = row[4]
-        extra_flags = database.ExtraFlags(row[5])
-        wow_factor = row[6]
-        exclusive = row[7]
-        school = row[8]
-        egg = await self.fetch_egg_name(row[9])
         
-        strength = row[10]
-        intellect = row[11]
-        agility = row[12]
-        will = row[13]
-        power = row[14]
+        strength = row[4]
+        agility = row[5]
+        will = row[6]
+        stat_power = row[7]
+        guts = row[8]
+        guile = row[9]
+        grit = row[10]
+        health = row[11]
 
-        pet_name = row[-1]
+        pet_name = await database.translate_name(self.bot.db, row[1])
+        if pet_name == None:
+            pet_name = real_name
+        pet_image = row[3].decode("utf-8")
+        pet_flags = row[12]
 
         talents = await self.fetch_pet_talents(pet_id)
-        cards = await self.fetch_pet_cards(pet_id)
+        powers = await self.fetch_pet_powers(pet_id)
+
+        talents = sorted(talents, key=lambda talent: talent[0])
+        powers = sorted(powers, key=lambda power: power[0])
 
         talents_unsorted = []
-        for talent in talents[:10]:
-            talents_unsorted.append(talent)
-        talents_sorted = sorted(talents_unsorted, key=lambda talent: talent[1])
+        talent_ids_unsorted = []
+        talent_rarities_unsorted = []
+        for talent in talents:
+            if talent[0][1] == None:
+                talents_unsorted.append(talent[0][2].decode("utf-8"))
+            else:
+                talents_unsorted.append(await database.translate_name(self.bot.db, talent[0][1]))
+            talent_ids_unsorted.append(talent[0][0])
         talent_string = ""
-        for talent in talents_sorted:
-            talent_string += talent[-1] + "\n"
-
-        derby_unsorted = []
-        for talent in talents[10:]:
-            derby_unsorted.append(talent)
-        derby_sorted = sorted(derby_unsorted, key=lambda talent: talent[1])
-        derby_string = ""
-        for talent in derby_sorted:
-            derby_string += talent[-1] + "\n"
-
+        for talent in talents_unsorted:
+            talent_string += talent + "\n"
+        powers_unsorted = []
+        power_ids_unsorted = []
+        power_rarities_unsorted = []
+        for power in powers:
+            if power[0][1] == None:
+                if power[0][2][:4] == "TEST":
+                    powers_unsorted.append(power[0][2].decode("utf-8"))
+                else:
+                    power_name, object_name = await database.translate_power_name(self.bot.db, power[0][6])
+                    powers_unsorted.append(power_name)
+            else:
+                powers_unsorted.append(await database.translate_name(self.bot.db, power[0][1]))
+            power_ids_unsorted.append(power[0][0])
+        power_string = ""
+        for power in powers_unsorted:
+            power_string += str(power) + "\n"
         embed = (
             discord.Embed(
-                title=f"Wow {wow_factor}" + " Exclusive" * exclusive,
-                color=database.make_school_color(school),
+                color=database.make_school_color(0),
             )
-            .set_author(name=f"{pet_name}\n({real_name}: {pet_id})\n{egg[0][0]}", icon_url=database.translate_school(school).url)
-            .add_field(name="Talents", value=talent_string, inline=True)
-            .add_field(name="Derby", value=derby_string, inline=True)
-            .add_field(name="Stats", value=f"{strength} Strength\n{intellect} Intellect\n{agility} Agility\n{will} Will\n{power} Power\n", inline=False)
+            .set_author(name=f"{pet_name}\n({real_name}: {pet_id})")
+            .add_field(name="Base Talents", value=talent_string, inline=True)
+            .add_field(name="Base Powers", value=power_string, inline=True)
+            .add_field(name="Max Stats", value=f"{strength} Strength\n{agility} Agility\n{will} Will\n{stat_power} Power\n{guts} Guts\n{guile} Guile\n{grit} Grit\n{health} Max HP", inline=False)
         )
 
-        if len(cards) > 0:
-            cards_string = self.format_card_string(cards)
-            embed = embed.add_field(name="Cards", value=cards_string)
+        if pet_image:
+            try:
+                image_name = (pet_image.split("|")[-1]).split(".")[0]
+                png_file = f"{image_name}.png"
+                png_name = png_file.replace(" ", "")
+                png_name = os.path.basename(png_name)
+                file_path = Path("PNG_Images") / png_name
+                discord_file = discord.File(file_path, filename=png_name)
+                embed.set_thumbnail(url=f"attachment://{png_name}")
+            except:
+                pass
 
 
-        if set_bonus != 0:
-            set_name = await self.fetch_set_bonus_name(set_bonus)
-            embed = embed.add_field(name="Set Bonus", value=set_name)
-
-
-        emoji_flags = database.translate_flags(extra_flags)
-        if len(emoji_flags) > 0:
-            embed.add_field(name="Flags", value="".join(emoji_flags))
+        flags = database.translate_flags(pet_flags)
+        if len(flags) > 0:
+            embed.add_field(name="Flags", value="\n".join(flags))
 
         return embed
 
 
-    @app_commands.command(name="find", description="Finds a Wizard101 pet by name")
+    @app_commands.command(name="find", description="Finds a Pirate101 pet by name")
     @app_commands.describe(name="The name of the pet to search for")
     async def find(
         self, 
         interaction: discord.Interaction, 
         name: str,
-        school: Optional[Literal["Any", "Fire", "Ice", "Storm", "Myth", "Life", "Death", "Balance"]] = "Any",
-        wow: Optional[int] = -1,
-        exclusive: Optional[bool] = None,
-        use_object_name: Optional[bool] = False
+        use_object_name: Optional[bool] = False,
     ):
         await interaction.response.defer()
         if type(interaction.channel) is DMChannel or type(interaction.channel) is PartialMessageable:
@@ -245,18 +187,9 @@ class Pets(commands.GroupCog, name="pet"):
             if not rows:
                 embed = discord.Embed(description=f"No pets with object name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
                 await interaction.followup.send(embed=embed)
-                
+
         else:
-            rows = await self.fetch_pets_with_filter(name, school, wow, exclusive, return_row=True)
-            if not rows:
-                filtered_rows = await self.fetch_pets_with_filter(self.bot.pet_list, school, wow, exclusive, return_row=True)
-                closest_rows = [(row, fuzz.token_set_ratio(name, row[-1]) + fuzz.ratio(name, row[-1])) for row in filtered_rows]
-                closest_rows = sorted(closest_rows, key=lambda x: x[1], reverse=True)
-                closest_rows = list(zip(*closest_rows))[0]
-                
-                rows = await self.fetch_pets_with_filter(closest_rows[0][-1], school, wow, exclusive, return_row=True)
-                if rows:
-                    logger.info("Failed to find '{}' instead searching for {}", name, closest_rows[0][-1])
+            rows = await self.fetch_pet(name)
 
         if rows:
             view = ItemView([await self.build_pet_embed(row) for row in rows])
@@ -266,15 +199,12 @@ class Pets(commands.GroupCog, name="pet"):
             embed = discord.Embed(description=f"No pets with name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
             await interaction.followup.send(embed=embed)
 
-    @app_commands.command(name="list", description="Finds a list of pet names that contain the string")
-    @app_commands.describe(name="The name of the pets to search for")
+    #@app_commands.command(name="list", description="Finds a list of pet names that contain the string")
+    #@app_commands.describe(name="The name of the pets to search for")
     async def list_names(
         self, 
         interaction: discord.Interaction, 
         name: str,
-        school: Optional[Literal["Any", "Fire", "Ice", "Storm", "Myth", "Life", "Death", "Balance"]] = "Any",
-        wow: Optional[int] = -1,
-        exclusive: Optional[bool] = None,
     ):
         await interaction.response.defer()
         if type(interaction.channel) is DMChannel or type(interaction.channel) is PartialMessageable:
@@ -290,9 +220,7 @@ class Pets(commands.GroupCog, name="pet"):
                 pets_containing_name.append(pet)
 
         no_duplicate_pets = [*set(pets_containing_name)]
-        filtered_pets = await self.fetch_pets_with_filter(pets=no_duplicate_pets, school=school, wow=wow, exclusive=exclusive)
-        no_no_duplicate_pets = [*set(filtered_pets)]
-        alphabetic_pets = sorted(no_no_duplicate_pets)
+        alphabetic_pets = sorted(no_duplicate_pets)
 
         if len(alphabetic_pets) > 0:
             chunks = [alphabetic_pets[i:i+15] for i in range(0, len(alphabetic_pets), 15)]
@@ -313,8 +241,6 @@ class Pets(commands.GroupCog, name="pet"):
             embed = discord.Embed(description=f"Unable to find {name}.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
 
             await interaction.followup.send(embed=embed)
-
-        
         
 
 

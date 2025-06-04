@@ -14,14 +14,9 @@ SELECT locale_en.data FROM items
 INNER JOIN locale_en ON locale_en.id == items.name
 """
 
-FIND_SPELL_NAME_QUERY = """
-SELECT locale_en.data FROM spells
-INNER JOIN locale_en ON locale_en.id == spells.name
-"""
-
-FIND_MOB_NAME_QUERY = """
-SELECT locale_en.data FROM mobs
-INNER JOIN locale_en ON locale_en.id == mobs.name
+FIND_UNIT_NAME_QUERY = """
+SELECT locale_en.data FROM units
+INNER JOIN locale_en ON locale_en.id == units.name
 """
 
 FIND_PET_NAME_QUERY = """
@@ -29,25 +24,28 @@ SELECT locale_en.data FROM pets
 INNER JOIN locale_en ON locale_en.id == pets.name
 """
 
-FIND_FISH_NAME_QUERY = """
-SELECT locale_en.data FROM fish
-INNER JOIN locale_en ON locale_en.id == fish.name
+FIND_POWER_NAME_QUERY = """
+SELECT locale_en.data FROM powers
+INNER JOIN locale_en ON locale_en.id == powers.name
+"""
+
+FIND_TALENT_NAME_QUERY = """
+SELECT locale_en.data FROM talents
+INNER JOIN locale_en ON locale_en.id == talents.name
 """
 
 class TheBot(commands.Bot):
-    def __init__(self, db_path: Path, deck_db_path: Path, **kwargs):
+    def __init__(self, db_path: Path, **kwargs):
         super().__init__(**kwargs)
 
         self.ready_once = False
         self.db_path = db_path
-        self.deck_db_path = deck_db_path
         self.db = None
-        self.deck_db = None
         self.item_list = []
-        self.spell_list = []
-        self.mob_list = []
+        self.unit_list = []
         self.pet_list = []
-        self.fish_list = []
+        self.power_list = []
+        self.talent_list = []
         self.uptime = datetime.now()
 
     async def on_ready(self):
@@ -60,10 +58,6 @@ class TheBot(commands.Bot):
         async with aiosqlite.connect(self.db_path) as db:
             self.db = await aiosqlite.connect(":memory:")
             await db.backup(self.db)
-        
-        async with aiosqlite.connect(self.deck_db_path) as db:
-            self.deck_db = await aiosqlite.connect(":memory:")
-            await db.backup(self.deck_db)
 
         # Make our item list        
         async with self.db.execute(FIND_ITEM_NAME_QUERY) as cursor:
@@ -72,19 +66,12 @@ class TheBot(commands.Bot):
         for i in tuple_item_list:
             self.item_list.append(i[0])
 
-        # Make our spell list
-        async with self.db.execute(FIND_SPELL_NAME_QUERY) as cursor:
-            tuple_spell_list = await cursor.fetchall()
+        # Make our unit list
+        async with self.db.execute(FIND_UNIT_NAME_QUERY) as cursor:
+            tuple_unit_list = await cursor.fetchall()
 
-        for i in tuple_spell_list:
-            self.spell_list.append(i[0])
-
-        # Make our mob list
-        async with self.db.execute(FIND_MOB_NAME_QUERY) as cursor:
-            tuple_mob_list = await cursor.fetchall()
-
-        for i in tuple_mob_list:
-            self.mob_list.append(i[0])
+        for i in tuple_unit_list:
+            self.unit_list.append(i[0])
 
         # Make our pet list
         async with self.db.execute(FIND_PET_NAME_QUERY) as cursor:
@@ -93,18 +80,11 @@ class TheBot(commands.Bot):
         for i in tuple_pet_list:
             self.pet_list.append(i[0])
 
-        # Make our fish list
-        async with self.db.execute(FIND_FISH_NAME_QUERY) as cursor:
-            tuple_fish_list = await cursor.fetchall()
-
-        for i in tuple_fish_list:
-            self.fish_list.append(i[0])
-
         # Load required bot extensions.
-        #await self.load_extension("jishaku")
+        await self.load_extension("jishaku")
         ext_count = await self.load_extensions_from_dir(EXTENSIONS)
 
-        #await self.tree.sync()
+        await self.tree.sync()
         # Log information about the user.
         logger.info(f"Logged in as {self.user}")
         logger.info(f"Running with {ext_count} extensions")
@@ -145,7 +125,6 @@ class TheBot(commands.Bot):
 
     async def close(self):
         await self.db.close()
-        await self.deck_db.close()
 
     def run(self):
         super().run(os.environ["DISCORD_TOKEN"])
