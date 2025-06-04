@@ -116,3 +116,6 @@ SummonedImages
 
 .idea/
 .vscode/
+
+# Unfinished extensions
+bot/unfinished-extensions/
