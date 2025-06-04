@@ -95,9 +95,9 @@ class Units(commands.GroupCog, name="unit"):
             if talent[2] == "Talent":
                 talent_name, object_name = await database.translate_talent_name(self.bot.db, talent[3])
                 if talent[5] == "Template" or talent[5] == "Unknown":
-                    starting_talent_string += talent_name + " " + str(talent[4]) + " (" + object_name + ")\n"
+                    starting_talent_string += talent_name + " " + str(talent[4]) + "\n"
                 elif talent[5] == "Trained":
-                    trained_talent_string += talent_name + " " + str(talent[4]) + " (" + object_name + ")\n"
+                    trained_talent_string += talent_name + " " + str(talent[4]) + "\n"
             elif talent[2] == "Power":
                 power_name, object_name = await database.translate_power_name(self.bot.db, talent[3])
                 if talent[5] == "Template" or talent[5] == "Unknown":
@@ -105,12 +105,18 @@ class Units(commands.GroupCog, name="unit"):
                 elif talent[5] == "Trained":
                     trained_power_string += power_name + " " + " (" + object_name + ")\n"
         
+        title_string = ""
+        if unit_name == unit_title or unit_title == None:
+            title_string = ""
+        else:
+            title_string += "\n" + unit_title
+
         embed = (
             discord.Embed(
                 # Make this actually do school colors later
                 color=database.make_school_color(0),
             )
-            .set_author(name=f"{unit_name} ({unit_title})\n({real_name}: {unit_id})")
+            .set_author(name=f"{unit_name} {title_string}\n({real_name}: {unit_id})")
             .add_field(name="Stat Modifiers", value=stat_string, inline=True)
             .add_field(name="\u200b", value="\u200b", inline=True)
             .add_field(name="\u200b", value="\u200b", inline=True)
