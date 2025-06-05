@@ -83,7 +83,7 @@ class Units(commands.GroupCog, name="unit"):
                 stat_string += "x" + str(stat[4] + 1) + " " + stat[2] + "\n"
             elif stat[3] == "Add" or stat[3] == "Set Add":
                 if stat[4] < 0:
-                    disp_operator = "-"
+                    disp_operator = ""
                 else:
                     disp_operator = "+"
                 stat_string += disp_operator + str(stat[4]) + " " + stat[2] + "\n"
