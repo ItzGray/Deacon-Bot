@@ -83,16 +83,8 @@ class Items(commands.GroupCog, name="item"):
                     primary_stat_flags = database.translate_stat_flags(type[3])
                     stat_string += "Boosts from "
                     for flag in range(len(primary_stat_flags)):
-                        try:
-                            test = primary_stat_flags[flag + 1]
-                        except:
-                            test = primary_stat_flags[flag - 1]
-                            if test == primary_stat_flags[flag]:
-                                stat_string += primary_stat_flags[flag]
-                            else:
-                                stat_string += " or " + primary_stat_flags[flag]
-                        else:
-                            stat_string += primary_stat_flags[flag] + ", "
+                        stat_string += primary_stat_flags[flag] + "/"
+                    stat_string = stat_string[:-1]
                     stat_string += "\n"
                     
         for stat in item_stats:
