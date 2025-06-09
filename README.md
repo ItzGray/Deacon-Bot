@@ -1,5 +1,14 @@
-# Deacon-Bot
+# Kimerith-WindHammer
+Repo for the W101 Discord Bot, Kimerith WindHammer
 
-A Discord bot that gets info about the game from the files.
-Code is heavily referenced from the similar bot for Wizard101, Kimerith WindHammer. Thanks to everyone who worked on that, as I definitely could not have made this without it.
-I'll finish this readme later
+# Usage
+
+Head over to the [katsuba repository](https://github.com/vbe0201/katsuba) and follow installation instructions in the README. Also do the optional steps to install Python library bindings.
+
+Then, head over to the [arrtype repository](https://github.com/wizspoil/arrtype) and follow README instructions to dump a types JSON from the game client.
+
+To create the database the bot uses go to https://github.com/ItzGray/piratedb and follow the instructions. Copy items.db over when it is completed
+
+Finally, edit the .env file to have the token of your discord bot
+
+Run `pipenv run bot` to run the bot
