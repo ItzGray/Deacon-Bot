@@ -108,14 +108,14 @@ class Talents(commands.GroupCog, name="talent"):
     ):
         await interaction.response.defer()
         if type(interaction.channel) is DMChannel or type(interaction.channel) is PartialMessageable:
-            logger.info("{} requested item '{}'", interaction.user.name, name)
+            logger.info("{} requested talent '{}'", interaction.user.name, name)
         else:
-            logger.info("{} requested item '{}' in channel #{} of {}", interaction.user.name, name, interaction.channel.name, interaction.guild.name)
+            logger.info("{} requested talent '{}' in channel #{} of {}", interaction.user.name, name, interaction.channel.name, interaction.guild.name)
         
         if use_object_name:
             rows = await self.fetch_object_name(name)
             if not rows:
-                embed = discord.Embed(description=f"No items with object name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
+                embed = discord.Embed(description=f"No talents with object name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
                 await interaction.followup.send(embed=embed)
         
         else:
@@ -126,7 +126,7 @@ class Talents(commands.GroupCog, name="talent"):
             await view.start(interaction)
         elif not use_object_name:
             logger.info("Failed to find '{}'", name)
-            embed = discord.Embed(description=f"No items with name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
+            embed = discord.Embed(description=f"No talents with name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
             await interaction.followup.send(embed=embed)
 
 async def setup(bot: TheBot):
