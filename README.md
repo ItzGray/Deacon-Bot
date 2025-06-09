@@ -12,3 +12,7 @@ To create the database the bot uses go to https://github.com/ItzGray/piratedb an
 Finally, edit the .env file to have the token of your discord bot
 
 Run `pipenv run bot` to run the bot
+
+# Other notes
+
+A huge thanks to Major, the person behind the similar [Kimerith WindHammer](https://github.com/MajorPain1/Kimerith-WindHammer) bot for Wizard101, from which I heavily used and referenced code. Without it, this project certainly would have taken a lot longer.
