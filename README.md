@@ -15,4 +15,4 @@ Run `pipenv run bot` to run the bot
 
 # Other notes
 
-A huge thanks to Major, the person behind the similar [Kimerith WindHammer](https://github.com/MajorPain1/Kimerith-WindHammer) bot for Wizard101, from which I heavily used and referenced code. Without it, this project certainly would have taken a lot longer.
+A huge thanks to the people behind the similar [Kimerith WindHammer](https://github.com/MajorPain1/Kimerith-WindHammer) bot for Wizard101, from which I heavily used and referenced code. Without it, this project certainly would have taken a lot longer.
