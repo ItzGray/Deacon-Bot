@@ -1,5 +1,5 @@
-# Kimerith-WindHammer
-Repo for the W101 Discord Bot, Kimerith WindHammer
+# Deacon-Bot
+Repository for the Pirate101 Discord bot Deacon
 
 # Usage
 
