@@ -30,7 +30,7 @@ if __name__ == "__main__":
         try:
             convert_dds_to_png(dds_file, png_file)
         except:
-            print("Exception occurred!")
+            print("Exception occurred! PNG file not written.")
             continue
 
     print("The DDS files have been converted to PNG files.")
