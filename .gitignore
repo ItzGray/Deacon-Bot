@@ -113,6 +113,10 @@ items.db
 decks.db
 PNG_Images
 SummonedImages
+Mob-WorldData.wad
+Player-WorldData.wad
+Root.wad
+_Shared-WorldData.wad
 
 .idea/
 .vscode/
