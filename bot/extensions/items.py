@@ -122,9 +122,11 @@ class Items(commands.GroupCog, name="item"):
             .add_field(name="Stats", value=stat_string, inline=True)
         )
 
+        discord_file = None
         if item_image:
             try:
-                image_name = (item_image.split("|")[-1]).split(".")[0]
+                image_name = item_image.split(".")[0]
+                logger.info(image_name)
                 png_file = f"{image_name}.png"
                 png_name = png_file.replace(" ", "")
                 png_name = os.path.basename(png_name)
@@ -144,7 +146,7 @@ class Items(commands.GroupCog, name="item"):
         if len(flags) > 0:
             embed.add_field(name="Flags", value="\n".join(flags), inline=False)
         
-        return embed
+        return embed, discord_file
     
     @app_commands.command(name="find", description="Finds a Pirate101 item by name")
     @app_commands.describe(name="The name of the item to search for")
@@ -170,7 +172,10 @@ class Items(commands.GroupCog, name="item"):
             rows = await self.fetch_item(name)
         
         if rows:
-            view = ItemView([await self.build_item_embed(row) for row in rows])
+            embeds = [await self.build_item_embed(row) for row in rows]
+            sorted_embeds = sorted(embeds, key=lambda embed: embed[0].author.name)
+            unzipped_embeds, unzipped_images = list(zip(*sorted_embeds))
+            view = ItemView(unzipped_embeds, files=unzipped_images)
             await view.start(interaction)
         elif not use_object_name:
             logger.info("Failed to find '{}'", name)

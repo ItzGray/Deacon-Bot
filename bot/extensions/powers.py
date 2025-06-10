@@ -57,9 +57,10 @@ class Powers(commands.GroupCog, name="power"):
             .add_field(name="Description", value=power_desc, inline=False)
         )
 
+        discord_file = None
         if power_image:
             try:
-                image_name = (power_image.split("|")[-1]).split(".")[0]
+                image_name = power_image.split(".")[0]
                 png_file = f"{image_name}.png"
                 png_name = png_file.replace(" ", "")
                 png_name = os.path.basename(png_name)
@@ -69,7 +70,7 @@ class Powers(commands.GroupCog, name="power"):
             except:
                 pass
         
-        return embed
+        return embed, discord_file
     
     @app_commands.command(name="find", description="Finds a Pirate101 talent by name")
     @app_commands.describe(name="The name of the talent to search for")
@@ -95,7 +96,10 @@ class Powers(commands.GroupCog, name="power"):
             rows = await self.fetch_power(name)
         
         if rows:
-            view = ItemView([await self.build_power_embed(row) for row in rows])
+            embeds = [await self.build_power_embed(row) for row in rows]
+            sorted_embeds = sorted(embeds, key=lambda embed: embed[0].author.name)
+            unzipped_embeds, unzipped_images = list(zip(*sorted_embeds))
+            view = ItemView(unzipped_embeds, files=unzipped_images)
             await view.start(interaction)
         elif not use_object_name:
             logger.info("Failed to find '{}'", name)

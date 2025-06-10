@@ -27,8 +27,11 @@ if __name__ == "__main__":
 
         print("DDS File:", dds_file)
         print("PNG File:", png_file)
-
-        convert_dds_to_png(dds_file, png_file)
+        try:
+            convert_dds_to_png(dds_file, png_file)
+        except:
+            print("Exception occurred!")
+            continue
 
     print("The DDS files have been converted to PNG files.")
     print("The PNG files are located in the PNG_Images directory.")

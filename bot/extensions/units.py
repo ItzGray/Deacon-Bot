@@ -144,9 +144,10 @@ class Units(commands.GroupCog, name="unit"):
             embed.add_field(name="Trainable Powers", value=trained_power_string, inline=True)
             embed.add_field(name="\u200b", value="\u200b", inline=True)
 
+        discord_file = None
         if unit_image:
             try:
-                image_name = (unit_image.split("|")[-1]).split(".")[0]
+                image_name = unit_image.split(".")[0]
                 png_file = f"{image_name}.png"
                 png_name = png_file.replace(" ", "")
                 png_name = os.path.basename(png_name)
@@ -156,7 +157,7 @@ class Units(commands.GroupCog, name="unit"):
             except:
                 pass
 
-        return embed
+        return embed, discord_file
     
     @app_commands.command(name="find", description="Finds a Pirate101 unit by name")
     @app_commands.describe(name="The name of the unit to search for")
@@ -182,7 +183,10 @@ class Units(commands.GroupCog, name="unit"):
             rows = await self.fetch_unit(name)
         
         if rows:
-            view = ItemView([await self.build_unit_embed(row) for row in rows])
+            embeds = [await self.build_unit_embed(row) for row in rows]
+            sorted_embeds = sorted(embeds, key=lambda embed: embed[0].author.name)
+            unzipped_embeds, unzipped_images = list(zip(*sorted_embeds))
+            view = ItemView(unzipped_embeds, files=unzipped_images)
             await view.start(interaction)
         elif not use_object_name:
             logger.info("Failed to find '{}'", name)
@@ -208,16 +212,10 @@ class Units(commands.GroupCog, name="unit"):
         stats.append(stat)
         stat_counts.append(stat_count)
         stat = 0
-        logger.info(f"Stats are {stats}")
-        logger.info(f"Levels are {curve_levels}")
-        logger.info(f"Values are {curve_values}")
         while stat < len(curve_stats):
             curr_stat = curve_stats[stat]
             stat_index = stats.index(curr_stat)
             curr_stat_count = stat_counts[stat_index]
-            logger.info(f"Stat is {curr_stat}")
-            logger.info(f"Stat index is {stat}")
-            logger.info(f"Stat count is {curr_stat_count}")
             only_one = False
             if curr_stat_count == 1:
                 only_one = True
@@ -229,15 +227,10 @@ class Units(commands.GroupCog, name="unit"):
                 if curve_types[stat + 1] == "Regular":
                     for stat_level in range(curr_stat_count):
                         if curve_levels[stat + stat_level] > level and curve_lvl2 == 0:
-                            logger.info(f"Stat level is {stat_level}")
                             curve_lvl1 = curve_levels[stat + (stat_level - 1)]
                             curve_lvl2 = curve_levels[stat + stat_level]
                             curve_val1 = curve_values[stat + (stat_level - 1)]
                             curve_val2 = curve_values[stat + stat_level]
-                            logger.info(f"Lvl 1 is {curve_lvl1} for {curr_stat}")
-                            logger.info(f"Lvl 2 is {curve_lvl2} for {curr_stat}")
-                            logger.info(f"Val 1 is {curve_val1} for {curr_stat}")
-                            logger.info(f"Val 2 is {curve_val2} for {curr_stat}")
                         elif stat_level == curr_stat_count - 1:
                             raw_num = curve_values[stat + stat_level]
                         else: 
@@ -245,18 +238,15 @@ class Units(commands.GroupCog, name="unit"):
                     try:
                         increment_num = (curve_val2 - curve_val1) / (curve_lvl2 - curve_lvl1)
                         raw_num = (curve_val1 + (increment_num * (level - curve_lvl1)))
-                        logger.info(f"Calc'd for {curr_stat}")
                     except:
                         pass
                 elif curve_types[stat + 1] == "Bonus":
                     for stat_level in range(curr_stat_count):
                         if level > curve_levels[stat + stat_level]:
                             raw_num += curve_values[stat + stat_level]
-                            logger.info(f"Added bonus of {curve_values[stat + stat_level]}")
                     bonus_flag = True
             else:
                 raw_num = curve_values[stat]
-            logger.info(f"Raw number is {raw_num}")
             final_num = 0
             bonus_set = False
             no_operator = True
@@ -304,7 +294,6 @@ class Units(commands.GroupCog, name="unit"):
 
         unit_school = row[5]
         unit_curve = row[12]
-        logger.info(unit_curve)
 
         unit_modifiers = await self.fetch_unit_stats(unit_id)
 
@@ -323,9 +312,10 @@ class Units(commands.GroupCog, name="unit"):
             .add_field(name=f"Stats for level {level}", value=final_stat_string, inline=True)
         )
 
+        discord_file = None
         if unit_image:
             try:
-                image_name = (unit_image.split("|")[-1]).split(".")[0]
+                image_name = unit_image.split(".")[0]
                 png_file = f"{image_name}.png"
                 png_name = png_file.replace(" ", "")
                 png_name = os.path.basename(png_name)
@@ -335,7 +325,7 @@ class Units(commands.GroupCog, name="unit"):
             except:
                 pass
 
-        return embed
+        return embed, discord_file
     
     @app_commands.command(name="calc", description="Calculates a unit's stats at a given level")
     @app_commands.describe(name="The name of the unit to search for")
@@ -362,7 +352,10 @@ class Units(commands.GroupCog, name="unit"):
             rows = await self.fetch_unit(name)
 
         if rows:
-            view = ItemView([await self.build_calc_embed(row, level) for row in rows])
+            embeds = [await self.build_calc_embed(row, level) for row in rows]
+            sorted_embeds = sorted(embeds, key=lambda embed: embed[0].author.name)
+            unzipped_embeds, unzipped_images = list(zip(*sorted_embeds))
+            view = ItemView(unzipped_embeds, files=unzipped_images)
             await view.start(interaction)
         elif not use_object_name:
             logger.info("Failed to find '{}'", name)
