@@ -107,6 +107,10 @@ class Units(commands.GroupCog, name="unit"):
                     starting_power_string += power_name + " " + " (" + object_name + ")\n"
                 elif talent[5] == "Trained":
                     trained_power_string += power_name + " " + " (" + object_name + ")\n"
+        if unit_school == "Privateer" and "Witch Hunter" not in trained_talent_string:
+            trained_talent_string += "Witch Hunter 2\n"
+        if unit_school == "Swashbuckler" and "Alert" not in starting_talent_string:
+            starting_talent_string += "Alert 1\n"
         
         title_string = ""
         if unit_name == unit_title or unit_title == None:
