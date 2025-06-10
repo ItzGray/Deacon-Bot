@@ -4,6 +4,7 @@ from operator import attrgetter
 from pathlib import Path
 import re
 import os
+import math
 from random import choice
 
 import discord
@@ -182,6 +183,186 @@ class Units(commands.GroupCog, name="unit"):
         
         if rows:
             view = ItemView([await self.build_unit_embed(row) for row in rows])
+            await view.start(interaction)
+        elif not use_object_name:
+            logger.info("Failed to find '{}'", name)
+            embed = discord.Embed(description=f"No units with name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
+            await interaction.followup.send(embed=embed)
+    
+    async def calc_unit_stats(self, curve, modifiers: List[tuple], level: int) -> List[tuple]:
+        curve_stats, curve_types, curve_levels, curve_values = await database.fetch_curve(self.bot.db, curve)
+        final_stats = []
+        stats = []
+        stat_counts = []
+        last_stat = ""
+        stat_count = 0
+        for stat in curve_stats:
+            if stat != last_stat:
+                if stat_count > 0:
+                    stats.append(last_stat)
+                    stat_counts.append(stat_count)
+                stat_count = 1
+                last_stat = stat
+            else:
+                stat_count += 1
+        stats.append(stat)
+        stat_counts.append(stat_count)
+        stat = 0
+        logger.info(f"Stats are {stats}")
+        logger.info(f"Levels are {curve_levels}")
+        logger.info(f"Values are {curve_values}")
+        while stat < len(curve_stats):
+            curr_stat = curve_stats[stat]
+            stat_index = stats.index(curr_stat)
+            curr_stat_count = stat_counts[stat_index]
+            logger.info(f"Stat is {curr_stat}")
+            logger.info(f"Stat index is {stat}")
+            logger.info(f"Stat count is {curr_stat_count}")
+            only_one = False
+            if curr_stat_count == 1:
+                only_one = True
+            if only_one == False:
+                raw_num = 0
+                curve_lvl2 = 0
+                curve_lvl1 = 0
+                bonus_flag = False
+                if curve_types[stat + 1] == "Regular":
+                    for stat_level in range(curr_stat_count):
+                        if curve_levels[stat + stat_level] > level and curve_lvl2 == 0:
+                            logger.info(f"Stat level is {stat_level}")
+                            curve_lvl1 = curve_levels[stat + (stat_level - 1)]
+                            curve_lvl2 = curve_levels[stat + stat_level]
+                            curve_val1 = curve_values[stat + (stat_level - 1)]
+                            curve_val2 = curve_values[stat + stat_level]
+                            logger.info(f"Lvl 1 is {curve_lvl1} for {curr_stat}")
+                            logger.info(f"Lvl 2 is {curve_lvl2} for {curr_stat}")
+                            logger.info(f"Val 1 is {curve_val1} for {curr_stat}")
+                            logger.info(f"Val 2 is {curve_val2} for {curr_stat}")
+                        elif stat_level == curr_stat_count - 1:
+                            raw_num = curve_values[stat + stat_level]
+                        else: 
+                            continue
+                    try:
+                        increment_num = (curve_val2 - curve_val1) / (curve_lvl2 - curve_lvl1)
+                        raw_num = (curve_val1 + (increment_num * (level - curve_lvl1)))
+                        logger.info(f"Calc'd for {curr_stat}")
+                    except:
+                        pass
+                elif curve_types[stat + 1] == "Bonus":
+                    for stat_level in range(curr_stat_count):
+                        if level > curve_levels[stat + stat_level]:
+                            raw_num += curve_values[stat + stat_level]
+                            logger.info(f"Added bonus of {curve_values[stat + stat_level]}")
+                    bonus_flag = True
+            else:
+                raw_num = curve_values[stat]
+            logger.info(f"Raw number is {raw_num}")
+            final_num = 0
+            bonus_set = False
+            no_operator = True
+            for modifier in modifiers:
+                if modifier[2] != curr_stat:
+                    continue
+                if raw_num == 0:
+                    continue
+                if bonus_set == True:
+                    continue
+                if modifier[3] == "Multiply":
+                    final_num = raw_num * modifier[4]
+                    no_operator = False
+                elif modifier[3] == "Multiply Add":
+                    final_num = raw_num + (raw_num * modifier[4])
+                    no_operator = False
+                elif modifier[3] == "Add" or modifier[3] == "Set Add":
+                    if bonus_flag == True:
+                        bonus_set = True
+                    final_num = raw_num + modifier[4]
+                    no_operator = False
+                elif modifier[3] == "Set":
+                    final_num = modifier[4]
+                    no_operator = False
+            if no_operator == True:
+                final_num = raw_num
+            final_stats.append((curr_stat, math.floor(final_num)))
+            stat += curr_stat_count
+
+        return final_stats
+    
+    async def build_calc_embed(self, row, level: int):
+        unit_id = row[0]
+        real_name = row[2].decode("utf-8")
+
+        unit_name = await database.translate_name(self.bot.db, row[1])
+        unit_title = await database.translate_name(self.bot.db, row[4])
+        unit_image = row[3].decode("utf-8")
+
+        title_string = ""
+        if unit_name == unit_title or unit_title == None:
+            title_string = ""
+        else:
+            title_string += "\n" + unit_title
+
+        unit_school = row[5]
+        unit_curve = row[12]
+        logger.info(unit_curve)
+
+        unit_modifiers = await self.fetch_unit_stats(unit_id)
+
+        unit_final_stats = await self.calc_unit_stats(unit_curve, unit_modifiers, level)
+
+        final_stat_string = ""
+        for stat in unit_final_stats:
+            final_stat_string += f"{stat[1]} {stat[0]}\n"
+
+        embed = (
+            discord.Embed(
+                # Make this actually do school colors later
+                color=database.make_school_color(0),
+            )
+            .set_author(name=f"{unit_name} {title_string}\n({real_name}: {unit_id})\n")
+            .add_field(name=f"Stats for level {level}", value=final_stat_string, inline=True)
+        )
+
+        if unit_image:
+            try:
+                image_name = (unit_image.split("|")[-1]).split(".")[0]
+                png_file = f"{image_name}.png"
+                png_name = png_file.replace(" ", "")
+                png_name = os.path.basename(png_name)
+                file_path = Path("PNG_Images") / png_name
+                discord_file = discord.File(file_path, filename=png_name)
+                embed.set_thumbnail(url=f"attachment://{png_name}")
+            except:
+                pass
+
+        return embed
+    
+    @app_commands.command(name="calc", description="Calculates a unit's stats at a given level")
+    @app_commands.describe(name="The name of the unit to search for")
+    async def calc(
+        self,
+        interaction: discord.Interaction,
+        name: str,
+        level: int,
+        use_object_name: Optional[bool] = False,
+    ):
+        await interaction.response.defer()
+        if type(interaction.channel) is DMChannel or type(interaction.channel) is PartialMessageable:
+            logger.info("{} requested unit stats for '{}' at level {}", interaction.user.name, name, level)
+        else:
+            logger.info("{} requested unit stats for '{}' at level {} in channel #{} of {}", interaction.user.name, name, level, interaction.channel.name, interaction.guild.name)
+        
+        if use_object_name:
+            rows = await self.fetch_object_name(name)
+            if not rows:
+                embed = discord.Embed(description=f"No units with object name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
+                await interaction.followup.send(embed=embed)
+        
+        else:
+            rows = await self.fetch_unit(name)
+
+        if rows:
+            view = ItemView([await self.build_calc_embed(row, level) for row in rows])
             await view.start(interaction)
         elif not use_object_name:
             logger.info("Failed to find '{}'", name)

@@ -247,6 +247,22 @@ async def fetch_raw_item_stats(db, item: int) -> List[StatObject]:
 
     return stats
 
+async def fetch_curve(db, curve):
+    stats = []
+    types = []
+    levels = []
+    values = []
+    async with db.execute(
+        "SELECT * FROM curve_points WHERE curve_points.curve == ?", (curve,)
+    ) as cursor:
+        async for row in cursor:
+            stats.append(row[2])
+            types.append(row[3])
+            levels.append(row[4])
+            values.append(row[5])
+    
+    return stats, types, levels, values
+
 def getStatIndexFromList(statlist: List[StatObject], statorder: int) -> int:
     for i, stat in enumerate(statlist):
         if stat.order == statorder:
