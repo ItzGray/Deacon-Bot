@@ -119,3 +119,6 @@ SummonedImages
 
 # Unfinished extensions
 bot/unfinished-extensions/
+
+# Move images script
+MoveImagesToBot.py
