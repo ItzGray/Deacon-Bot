@@ -34,15 +34,11 @@ class Help(commands.Cog):
     ):
         embed = discord.Embed(
             title=f"Deacon's commands",
-            color=discord.Color.dark_blue(),
+            color=discord.Color.greyple(),
             description=HELP_DESCRIPTION,
         )
 
         await interaction.response.send_message(embed=embed)
-
-        
-
-
 
 async def setup(bot: TheBot):
     await bot.add_cog(Help(bot))
