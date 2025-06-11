@@ -38,14 +38,6 @@ AND (? = -1 OR talents.ranks = ?)
 COLLATE NOCASE
 """
 
-FIND_OBJECT_NAME_WITH_FILTER_QUERY = """
-SELECT * FROM talents
-INNER JOIN locale_en ON locale_en.id == talents.name
-WHERE talents.real_name == ? COLLATE NOCASE
-AND (? = -1 OR talents.ranks = ?)
-COLLATE NOCASE
-"""
-
 FIND_TALENT_CONTAIN_STRING_QUERY = """
 SELECT * FROM talents
 LEFT JOIN locale_en ON locale_en.id == talents.name
@@ -75,11 +67,6 @@ class Talents(commands.GroupCog, name="talent"):
         
     async def fetch_talent_with_filter(self, name: str, ranks: int) -> List[tuple]:
         async with self.bot.db.execute(FIND_TALENTS_WITH_FILTER_QUERY, (name,ranks,ranks)) as cursor:
-            return await cursor.fetchall()
-        
-    async def fetch_object_name_with_filter(self, name: str, ranks: int) -> List[tuple]:
-        name_bytes = name.encode('utf-8')
-        async with self.bot.db.execute(FIND_OBJECT_NAME_WITH_FILTER_QUERY, (name_bytes,ranks,ranks)) as cursor:
             return await cursor.fetchall()
         
     async def fetch_talent_list(self, name: str) -> List[tuple]:
@@ -162,10 +149,7 @@ class Talents(commands.GroupCog, name="talent"):
             logger.info("{} requested talent '{}' in channel #{} of {}", interaction.user.name, name, interaction.channel.name, interaction.guild.name)
         
         if use_object_name:
-            if ranks != -1:
-                rows = await self.fetch_object_name_with_filter(name, ranks)
-            else:
-                rows = await self.fetch_object_name(name)
+            rows = await self.fetch_object_name(name)
             if not rows:
                 embed = discord.Embed(description=f"No units with object name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
                 await interaction.followup.send(embed=embed)

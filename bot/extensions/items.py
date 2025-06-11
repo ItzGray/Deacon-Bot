@@ -40,16 +40,6 @@ AND (? = -1 OR items.equip_level = ?)
 COLLATE NOCASE
 """
 
-FIND_OBJECT_NAME_WITH_FILTER_QUERY = """
-SELECT * FROM items
-INNER JOIN locale_en ON locale_en.id == items.name
-WHERE items.real_name == ? COLLATE NOCASE
-AND (? = 'Any' OR items.equip_school = ?)
-AND (? = 'Any' OR items.item_type = ?)
-AND (? = -1 OR items.equip_level = ?)
-COLLATE NOCASE
-"""
-
 FIND_ITEM_CONTAIN_STRING_QUERY = """
 SELECT * FROM items
 LEFT JOIN locale_en ON locale_en.id == items.name
@@ -81,11 +71,6 @@ class Items(commands.GroupCog, name="item"):
     
     async def fetch_item_with_filter(self, name: str, school: str, kind: str, level: int):
         async with self.bot.db.execute(FIND_ITEMS_WITH_FILTER_QUERY, (name,school,school,kind,kind,level,level)) as cursor:
-            return await cursor.fetchall()
-    
-    async def fetch_object_name_with_filter(self, name: str, school: str, kind: str, level: int):
-        name_bytes = name.encode('utf-8')
-        async with self.bot.db.execute(FIND_OBJECT_NAME_WITH_FILTER_QUERY, (name_bytes,school,school,kind,kind,level,level)) as cursor:
             return await cursor.fetchall()
     
     async def fetch_item_list(self, name: str) -> List[tuple]:
@@ -218,10 +203,7 @@ class Items(commands.GroupCog, name="item"):
             logger.info("{} requested item '{}' in channel #{} of {}", interaction.user.name, name, interaction.channel.name, interaction.guild.name)
         
         if use_object_name:
-            if school != "Any" or kind != "Any" or level != -1:
-                rows = await self.fetch_object_name_with_filter(name, school, kind, level)
-            else:
-                rows = await self.fetch_object_name(name)
+            rows = await self.fetch_object_name(name)
             if not rows:
                 embed = discord.Embed(description=f"No items with object name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
                 await interaction.followup.send(embed=embed)

@@ -44,15 +44,6 @@ AND (? = 'Any' OR units.kind = ?)
 COLLATE NOCASE
 """
 
-FIND_OBJECT_NAME_WITH_FILTER_QUERY = """
-SELECT * FROM units
-INNER JOIN locale_en ON locale_en.id == units.name
-WHERE units.real_name == ? COLLATE NOCASE
-AND (? = 'Any' OR units.school = ?)
-AND (? = 'Any' OR units.kind = ?)
-COLLATE NOCASE
-"""
-
 FIND_UNIT_CONTAIN_STRING_QUERY = """
 SELECT * FROM units
 LEFT JOIN locale_en ON locale_en.id == units.name
@@ -83,11 +74,6 @@ class Units(commands.GroupCog, name="unit"):
         
     async def fetch_unit_with_filter(self, name: str, school: str, kind: str) -> List[tuple]:
         async with self.bot.db.execute(FIND_UNITS_WITH_FILTER_QUERY, (name,school,school,kind,kind)) as cursor:
-            return await cursor.fetchall()
-        
-    async def fetch_object_name_with_filter(self, name: str, school: str, kind: str) -> List[tuple]:
-        name_bytes = name.encode('utf-8')
-        async with self.bot.db.execute(FIND_OBJECT_NAME_WITH_FILTER_QUERY, (name_bytes,school,school,kind,kind)) as cursor:
             return await cursor.fetchall()
         
     async def fetch_unit_list(self, name: str) -> List[tuple]:
@@ -244,10 +230,7 @@ class Units(commands.GroupCog, name="unit"):
             logger.info("{} requested unit '{}' in channel #{} of {}", interaction.user.name, name, interaction.channel.name, interaction.guild.name)
         
         if use_object_name:
-            if school != "Any" or kind != "Any":
-                rows = await self.fetch_object_name_with_filter(name, school, kind)
-            else:
-                rows = await self.fetch_object_name(name)
+            rows = await self.fetch_object_name(name)
             if not rows:
                 embed = discord.Embed(description=f"No units with object name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
                 await interaction.followup.send(embed=embed)
@@ -473,10 +456,7 @@ class Units(commands.GroupCog, name="unit"):
             logger.info("{} requested unit stats for '{}' at level {} in channel #{} of {}", interaction.user.name, name, level, interaction.channel.name, interaction.guild.name)
         
         if use_object_name:
-            if school != "Any" or kind != "Any":
-                rows = await self.fetch_object_name_with_filter(name, school, kind)
-            else:
-                rows = await self.fetch_object_name(name)
+            rows = await self.fetch_object_name(name)
             if not rows:
                 embed = discord.Embed(description=f"No units with object name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
                 await interaction.followup.send(embed=embed)
