@@ -239,6 +239,7 @@ async def fetch_curve(db, curve):
 
 def get_item_icon_url(item_type: str) -> str:
     try:
+        logger.info(_ITEMS_STR.index(item_type))
         return _ITEMS[_ITEMS_STR.index(item_type)].url
     except:
         return ""
@@ -248,6 +249,9 @@ def get_school_icon_url(school: str) -> str:
         return _SCHOOLS[_SCHOOLS_STR.index(school)].url
     except:
         return ""
+
+def get_item_emoji(item_type: str):
+    return _ITEMS[_ITEMS_STR.index(item_type)]
     
 def get_school_emoji(school: str):
     return _SCHOOLS[_SCHOOLS_STR.index(school)]
