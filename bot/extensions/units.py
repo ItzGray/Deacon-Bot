@@ -292,7 +292,7 @@ class Units(commands.GroupCog, name="unit"):
         return embeds
     
     @app_commands.command(name="list", description="Finds a list of units that contain a given string")
-    @app_commands.describe(name="The name of the items to search for")
+    @app_commands.describe(name="The name of the units to search for")
     async def list(
         self,
         interaction: discord.Interaction,
