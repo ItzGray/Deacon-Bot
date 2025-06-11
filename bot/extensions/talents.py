@@ -30,6 +30,36 @@ FIND_TALENT_RANKS_QUERY = """
 SELECT * FROM talent_ranks WHERE talent_ranks.talent == ?
 """
 
+FIND_TALENTS_WITH_FILTER_QUERY = """
+SELECT * FROM talents
+INNER JOIN locale_en ON locale_en.id == talents.name
+WHERE locale_en.data == ? COLLATE NOCASE
+AND (? = -1 OR talents.ranks = ?)
+COLLATE NOCASE
+"""
+
+FIND_OBJECT_NAME_WITH_FILTER_QUERY = """
+SELECT * FROM talents
+INNER JOIN locale_en ON locale_en.id == talents.name
+WHERE talents.real_name == ? COLLATE NOCASE
+AND (? = -1 OR talents.ranks = ?)
+COLLATE NOCASE
+"""
+
+FIND_TALENT_CONTAIN_STRING_QUERY = """
+SELECT * FROM talents
+LEFT JOIN locale_en ON locale_en.id == talents.name
+WHERE INSTR(lower(locale_en.data), ?) > 0
+"""
+
+FIND_TALENT_CONTAIN_STRING_WITH_FILTER_QUERY = """
+SELECT * FROM talents
+LEFT JOIN locale_en ON locale_en.id == talents.name
+WHERE INSTR(lower(locale_en.data), ?) > 0
+AND (? = -1 OR talents.ranks = ?)
+COLLATE NOCASE
+"""
+
 class Talents(commands.GroupCog, name="talent"):
     def __init__(self, bot: TheBot):
         self.bot = bot
@@ -41,6 +71,23 @@ class Talents(commands.GroupCog, name="talent"):
     async def fetch_object_name(self, name: str) -> List[tuple]:
         name_bytes = name.encode('utf-8')
         async with self.bot.db.execute(FIND_OBJECT_NAME_QUERY, (name_bytes,)) as cursor:
+            return await cursor.fetchall()
+        
+    async def fetch_talent_with_filter(self, name: str, ranks: int) -> List[tuple]:
+        async with self.bot.db.execute(FIND_TALENTS_WITH_FILTER_QUERY, (name,ranks,ranks)) as cursor:
+            return await cursor.fetchall()
+        
+    async def fetch_object_name_with_filter(self, name: str, ranks: int) -> List[tuple]:
+        name_bytes = name.encode('utf-8')
+        async with self.bot.db.execute(FIND_OBJECT_NAME_WITH_FILTER_QUERY, (name_bytes,ranks,ranks)) as cursor:
+            return await cursor.fetchall()
+        
+    async def fetch_talent_list(self, name: str) -> List[tuple]:
+        async with self.bot.db.execute(FIND_TALENT_CONTAIN_STRING_QUERY, (name,)) as cursor:
+            return await cursor.fetchall()
+    
+    async def fetch_talent_list_with_filter(self, name: str, ranks: int) -> List[tuple]:
+        async with self.bot.db.execute(FIND_TALENT_CONTAIN_STRING_WITH_FILTER_QUERY, (name,ranks,ranks)) as cursor:
             return await cursor.fetchall()
         
     async def fetch_talent_ranks(self, id: str) -> List[tuple]:
@@ -105,6 +152,7 @@ class Talents(commands.GroupCog, name="talent"):
         self,
         interaction: discord.Interaction,
         name: str,
+        ranks: Optional[int] = -1,
         use_object_name: Optional[bool] = False,
     ):
         await interaction.response.defer()
@@ -114,13 +162,19 @@ class Talents(commands.GroupCog, name="talent"):
             logger.info("{} requested talent '{}' in channel #{} of {}", interaction.user.name, name, interaction.channel.name, interaction.guild.name)
         
         if use_object_name:
-            rows = await self.fetch_object_name(name)
+            if ranks != -1:
+                rows = await self.fetch_object_name_with_filter(name, ranks)
+            else:
+                rows = await self.fetch_object_name(name)
             if not rows:
-                embed = discord.Embed(description=f"No talents with object name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
+                embed = discord.Embed(description=f"No units with object name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
                 await interaction.followup.send(embed=embed)
         
         else:
-            rows = await self.fetch_talent(name)
+            if ranks != -1:
+                rows = await self.fetch_talent_with_filter(name, ranks)
+            else:
+                rows = await self.fetch_unit(name)
         
         if rows:
             embeds = [await self.build_talent_embed(row) for row in rows]
@@ -131,6 +185,50 @@ class Talents(commands.GroupCog, name="talent"):
         elif not use_object_name:
             logger.info("Failed to find '{}'", name)
             embed = discord.Embed(description=f"No talents with name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
+            await interaction.followup.send(embed=embed)
+
+    async def build_list_embed(self, rows: List[tuple], name: str):
+        desc_string = ""
+        for row in rows:
+            real_name = row[2].decode("utf-8")
+            talent_name = await database.translate_name(self.bot.db, row[1])
+            desc_string += f"{talent_name} ({real_name})\n"
+        
+        embed = discord.Embed(
+            color=discord.Color.greyple(),
+            description=desc_string,
+        ).set_author(name=f"Searching for: {name}", icon_url=emojis.UNIVERSAL.url)
+
+        embeds = []
+        embeds.append(embed)
+
+        return embeds
+    
+    @app_commands.command(name="list", description="Finds a list of talents that contain a given string")
+    @app_commands.describe(name="The name of the talents to search for")
+    async def list(
+        self,
+        interaction: discord.Interaction,
+        name: str,
+        ranks: Optional[int] = -1,
+    ):
+        await interaction.response.defer()
+        if type(interaction.channel) is DMChannel or type(interaction.channel) is PartialMessageable:
+            logger.info("{} requested talent list for '{}'", interaction.user.name, name)
+        else:
+            logger.info("{} requested talent list for '{}' in channel #{} of {}", interaction.user.name, name, interaction.channel.name, interaction.guild.name)
+        
+        if ranks != -1:
+            rows = await self.fetch_talent_list_with_filter(name, ranks)
+        else:
+            rows = await self.fetch_talent_list(name)
+        
+        if rows:
+            view = ItemView(await self.build_list_embed(rows, name))
+            await view.start(interaction)
+        else:
+            logger.info("Failed to find list for '{}'", name)
+            embed = discord.Embed(description=f"No talents containing name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
             await interaction.followup.send(embed=embed)
 
 async def setup(bot: TheBot):
