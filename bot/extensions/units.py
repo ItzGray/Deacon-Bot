@@ -77,17 +77,17 @@ class Units(commands.GroupCog, name="unit"):
         stat_string = ""
         for stat in unit_stats:
             if stat[3] == "Set":
-                stat_string += str(stat[4]) + " " + stat[2] + "\n"
+                stat_string += f"{str(stat[4])} {stat[2]} {database.get_stat_emoji(stat[2])}\n"
             elif stat[3] == "Multiply":
-                stat_string += "x" + str(stat[4]) + " " + stat[2] + "\n"
+                stat_string += f"x{str(stat[4])} {stat[2]} {database.get_stat_emoji(stat[2])}\n"
             elif stat[3] == "Multiply Add":
-                stat_string += "x" + str(stat[4] + 1) + " " + stat[2] + "\n"
+                stat_string += f"x{str(stat[4] + 1)} {stat[2]} {database.get_stat_emoji(stat[2])}\n"
             elif stat[3] == "Add" or stat[3] == "Set Add":
                 if stat[4] < 0:
                     disp_operator = ""
                 else:
                     disp_operator = "+"
-                stat_string += disp_operator + str(stat[4]) + " " + stat[2] + "\n"
+                stat_string += f"{disp_operator}{str(stat[4])} {stat[2]} {database.get_stat_emoji(stat[2])}\n"
         starting_talent_string = ""
         trained_talent_string = ""
         starting_power_string = ""
@@ -118,12 +118,26 @@ class Units(commands.GroupCog, name="unit"):
         else:
             title_string += "\n" + unit_title
 
+        desc_string = ""
+        desc_string += "Does " + unit_dmg_type + "\n"
+        desc_string += "Boosts from "
+        for flag in range(len(unit_primary_stat)):
+            desc_string += f"{database.get_stat_emoji(unit_primary_stat[flag])}/"
+        desc_string = desc_string[:-1]
+        desc_string += "\n"
+        if unit_beast_flag == 1:
+            desc_string += "Boosted by the Beastmaster Banners\n"
+        if unit_undead_flag == 1:
+            desc_string += "Boosted by Baron Samedi's Standard\n"
+        if unit_bird_flag == 1:
+            desc_string += "Boosted by the Imperator's Standard\n"
+
         embed = (
             discord.Embed(
-                # Make this actually do school colors later
-                color=database.make_school_color(0),
+                color=database.make_school_color(unit_school),
+                description=desc_string
             )
-            .set_author(name=f"{unit_name} {title_string}\n({real_name}: {unit_id})")
+            .set_author(name=f"{unit_name} {title_string}\n({real_name}: {unit_id})", icon_url=database.get_school_icon_url(unit_school))
             .add_field(name="Stat Modifiers", value=stat_string, inline=True)
             .add_field(name="\u200b", value="\u200b", inline=True)
             .add_field(name="\u200b", value="\u200b", inline=True)
@@ -308,14 +322,13 @@ class Units(commands.GroupCog, name="unit"):
 
         final_stat_string = ""
         for stat in unit_final_stats:
-            final_stat_string += f"{stat[1]} {stat[0]}\n"
+            final_stat_string += f"{stat[1]} {stat[0]} {database.get_stat_emoji(stat[0])}\n"
 
         embed = (
             discord.Embed(
-                # Make this actually do school colors later
-                color=database.make_school_color(0),
+                color=database.make_school_color(unit_school),
             )
-            .set_author(name=f"{unit_name} {title_string}\n({real_name}: {unit_id})\n")
+            .set_author(name=f"{unit_name} {title_string}\n({real_name}: {unit_id})\n", icon_url=database.get_school_icon_url(unit_school))
             .add_field(name=f"Stats for level {level}", value=final_stat_string, inline=True)
         )
 

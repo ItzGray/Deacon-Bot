@@ -99,8 +99,6 @@ class Pets(commands.GroupCog, name="pet"):
         health = row[11]
 
         pet_name = await database.translate_name(self.bot.db, row[1])
-        if pet_name == None:
-            pet_name = real_name
         pet_image = row[3].decode("utf-8")
         pet_flags = row[12]
 
@@ -138,14 +136,25 @@ class Pets(commands.GroupCog, name="pet"):
         power_string = ""
         for power in powers_unsorted:
             power_string += str(power) + "\n"
+        
+        pet_stat_string = ""
+        pet_stat_string += f"{strength} Strength {database.get_stat_emoji('Strength')}\n"
+        pet_stat_string += f"{agility} Agility {database.get_stat_emoji('Agility')}\n"
+        pet_stat_string += f"{will} Will {database.get_stat_emoji('Will')}\n"
+        pet_stat_string += f"{stat_power} Power {database.get_stat_emoji('Power')}\n"
+        pet_stat_string += f"{guts} Guts {database.get_stat_emoji('Guts')}\n"
+        pet_stat_string += f"{guile} Guile {database.get_stat_emoji('Guile')}\n"
+        pet_stat_string += f"{grit} Grit {database.get_stat_emoji('Grit')}\n"
+        pet_stat_string += f"{health} Max Health {database.get_stat_emoji('Max Health')}\n"
+
         embed = (
             discord.Embed(
-                color=database.make_school_color(0),
+                color=discord.Color.greyple(),
             )
             .set_author(name=f"{pet_name}\n({real_name}: {pet_id})")
             .add_field(name="Base Talents", value=talent_string, inline=True)
             .add_field(name="Base Powers", value=power_string, inline=True)
-            .add_field(name="Max Stats", value=f"{strength} Strength\n{agility} Agility\n{will} Will\n{stat_power} Power\n{guts} Guts\n{guile} Guile\n{grit} Grit\n{health} Max HP", inline=False)
+            .add_field(name="Max Stats", value=pet_stat_string, inline=False)
         )
 
         discord_file = None

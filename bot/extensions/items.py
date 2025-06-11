@@ -53,6 +53,7 @@ class Items(commands.GroupCog, name="item"):
 
         item_name = await database.translate_name(self.bot.db, row[1])
         item_image = row[3].decode("utf-8")
+        item_type = row[4].decode("utf-8")
         item_flags = row[5]
         item_reqs = [row[6], row[7], row[8], row[9]]
 
@@ -83,7 +84,7 @@ class Items(commands.GroupCog, name="item"):
                     primary_stat_flags = database.translate_stat_flags(type[3])
                     stat_string += "Boosts from "
                     for flag in range(len(primary_stat_flags)):
-                        stat_string += primary_stat_flags[flag] + "/"
+                        stat_string += f"{database.get_stat_emoji(primary_stat_flags[flag])}/"
                     stat_string = stat_string[:-1]
                     stat_string += "\n"
                     
@@ -94,7 +95,7 @@ class Items(commands.GroupCog, name="item"):
                 stat_string += "+" + str(stat_rounded_int) + "%"
             else:
                 stat_string += "+" + str(stat[4])
-            stat_string += " " + str(stat[3]) + "\n"
+            stat_string += f" {str(stat[3])} {database.get_stat_emoji(str(stat[3]))}\n"
         
         for talent in item_talents:
             talent_name, object_name = await database.translate_talent_name(self.bot.db, talent[3])
@@ -106,7 +107,7 @@ class Items(commands.GroupCog, name="item"):
 
         requirement_string = ""
         if item_reqs[0]:
-            requirement_string += item_reqs[0] + " only\n"
+            requirement_string += f"{database.get_school_emoji(item_reqs[0])} only\n"
         if item_reqs[1] > 1:
             requirement_string += "Level " + str(item_reqs[1]) + "+ only\n"
         if item_reqs[2]:
@@ -115,10 +116,9 @@ class Items(commands.GroupCog, name="item"):
         
         embed = (
             discord.Embed(
-                # Make this actually do school colors later
-                color=database.make_school_color(0),
+                color=database.make_school_color(item_reqs[0]),
             )
-            .set_author(name=f"{item_name}\n({real_name}: {item_id})")
+            .set_author(name=f"{item_name}\n({real_name}: {item_id})", icon_url=database.get_item_icon_url(item_type))
             .add_field(name="Stats", value=stat_string, inline=True)
         )
 
@@ -126,7 +126,6 @@ class Items(commands.GroupCog, name="item"):
         if item_image:
             try:
                 image_name = item_image.split(".")[0]
-                logger.info(image_name)
                 png_file = f"{image_name}.png"
                 png_name = png_file.replace(" ", "")
                 png_name = os.path.basename(png_name)

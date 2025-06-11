@@ -14,18 +14,14 @@ from .__main__ import ROOT_DIR, ITEMS_DB
 
 _SCHOOL_COLORS = [
     discord.Color.greyple(), # Universal
-    discord.Color.greyple(), # Universal
     discord.Color.red(), # Buccaneer
-    discord.Color.blue(), # Privateer
+    discord.Color.yellow(), # Privateer
     discord.Color.green(), # Witchdoctor
     discord.Color.orange(), # Musketeer
     discord.Color.purple(), # Swashbuckler
 ]
 
-_PET_LEVELS = ["Baby", "Teen", "Adult", "Ancient", "Epic", "Mega", "Ultra"]
-
 _SCHOOLS = [
-    UNIVERSAL,
     UNIVERSAL,
     BUCCANEER,
     PRIVATEER,
@@ -43,7 +39,6 @@ _ITEMS = [
     TOTEM,
     CHARM,
     RING,
-    MOUNT,
 ]
 
 _ITEMS_STR = [
@@ -55,10 +50,10 @@ _ITEMS_STR = [
     "Totem",
     "Charm",
     "Ring",
-    "Mount",
 ]
 
 _SCHOOLS_STR = [
+    None, # Universal
     "Buccaneer",
     "Privateer",
     "Witchdoctor",
@@ -66,12 +61,54 @@ _SCHOOLS_STR = [
     "Swashbuckler",
 ]
 
+_STATS = [
+    HEALTH,
+    ENERGY,
+    WEAPON_POWER,
+    SPELL_POWER,
+    ARMOR,
+    MAGIC_RESIST,
+    ACCURACY,
+    CRIT,
+    DODGE,
+    STRENGTH,
+    AGILITY,
+    WILL,
+    ARMOR_PENETRATION,
+    ATTACK_RANGE,
+    MOVEMENT_RANGE,
+    GRIT,
+    GUILE,
+    GUTS,
+    PET_POWER,
+]
+
+_STATS_STR = [
+    "Max Health",
+    "Max Energy",
+    "Weapon Power",
+    "Spell Power",
+    "Armor",
+    "Magic Resist",
+    "Accuracy",
+    "Crit Rating",
+    "Dodge",
+    "Strength",
+    "Agility",
+    "Will",
+    "Armor Penetration",
+    "Attack Range",
+    "Movement Range",
+    "Grit",
+    "Guile",
+    "Guts",
+    "Power",
+]
 
 class StatFlags(IntFlag):
     Strength = 1 << 0
     Agility = 1 << 1
     Will = 1 << 2
-
 
 class ItemFlags(IntFlag):
     NoTrade = 1 << 0
@@ -79,22 +116,6 @@ class ItemFlags(IntFlag):
     NoTrash = 1 << 2
     NoAuction = 1 << 3
     NoStitch = 1 << 4
-
-
-@dataclass
-class StatObject:
-    order: int
-    value: int
-    string: str
-
-    def to_string(self) -> str:
-        if self.string.startswith(("Allows", "Invul", "Gives", "Maycasts", "-")):
-            return self.string
-        elif self.value > 0:
-            return f"+{self.value}{self.string}"
-        else:
-            return f"{self.value}{self.string}"
-
 
 def translate_flags(flag: int) -> List[str]:
     flags = []
@@ -135,31 +156,6 @@ _STAT_DISPLAY_TABLE = {
     # Maybe do things with this later
 }
 
-
-_STAT_ORDER_TABLE = [
-    # Maybe do things with this later
-]
-
-def translate_stat(stat: int) -> Tuple[int, str, bool]:
-    try:
-        display_stat = _STAT_DISPLAY_TABLE[stat]
-        order_number = _STAT_ORDER_TABLE.index(stat)
-    except KeyError:
-        display_stat = " Unknown Stat"
-        order_number = 2000000
-    
-    return order_number, display_stat
-
-
-def unpack_stat_value(value: int) -> float:
-    raw = value.to_bytes(4, "little")
-    return unpack("<f", raw)[0]
-
-def unpack_int_list(value: int) -> List[int]:
-    raw = value.to_bytes(88, "little")
-    return unpack("<22i", raw)
-
-
 def translate_school(school: int) -> discord.PartialEmoji:
     return _SCHOOLS[school]
 
@@ -174,12 +170,8 @@ def translate_equip_school(school: int) -> str:
         return f"{school_emoji} only"
 
 
-def make_school_color(school: int) -> discord.Color:
-    return _SCHOOL_COLORS[school & 0x7FFF_FFFF]
-
-
-def translate_pet_level(level: int) -> str:
-    return _PET_LEVELS[level - 1]
+def make_school_color(school: str) -> discord.Color:
+    return _SCHOOL_COLORS[_SCHOOLS_STR.index(school)]
 
 
 _TYPE_EMOJIS = {
@@ -229,24 +221,6 @@ async def translate_power_name(db, id: int) -> str:
                 name = object_name
     return name, object_name
 
-async def fetch_raw_item_stats(db, item: int) -> List[StatObject]:
-    stats = []
-
-    async with db.execute(
-        "SELECT * FROM item_stats WHERE item == ?", (item,)
-    ) as cursor:
-        async for row in cursor:
-            a = row[3]
-            b = row[4]
-
-            match row[2]:
-                # Regular stat
-                case "Stat":
-                    order, stat = translate_stat(a)
-                    stats.append(StatObject(order, b, stat))
-
-    return stats
-
 async def fetch_curve(db, curve):
     stats = []
     types = []
@@ -263,27 +237,26 @@ async def fetch_curve(db, curve):
     
     return stats, types, levels, values
 
-def getStatIndexFromList(statlist: List[StatObject], statorder: int) -> int:
-    for i, stat in enumerate(statlist):
-        if stat.order == statorder:
-            return i
+def get_item_icon_url(item_type: str) -> str:
+    try:
+        return _ITEMS[_ITEMS_STR.index(item_type)].url
+    except:
+        return ""
 
-    return -1
-
-async def sum_stats(db, existing_stats: List[StatObject], equipped_items: List[int]):
-    existing_stats_dict = {stat.order: stat for stat in existing_stats}
-
-    for item_id in equipped_items:
-        for stat in await fetch_raw_item_stats(db, item_id):
-            existing_stat = existing_stats_dict.get(stat.order)
-            
-            if existing_stat is not None:
-                index = getStatIndexFromList(existing_stats, existing_stat.order)
-                existing_stats[index].value = stat.value + existing_stat.value
-            else:
-                existing_stats.append(stat)
-                existing_stats_dict[stat.order] = stat
-
+def get_school_icon_url(school: str) -> str:
+    try:
+        return _SCHOOLS[_SCHOOLS_STR.index(school)].url
+    except:
+        return ""
+    
+def get_school_emoji(school: str):
+    return _SCHOOLS[_SCHOOLS_STR.index(school)]
+    
+def get_stat_emoji(stat: str):
+    try:
+        return _STATS[_STATS_STR.index(stat)]
+    except:
+        return ""
 
 def _make_placeholders(count: int) -> str:
     return ", ".join(["?"] * count)
