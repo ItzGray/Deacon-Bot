@@ -26,6 +26,12 @@ INNER JOIN locale_en ON locale_en.id == powers.name
 WHERE powers.real_name == ? COLLATE NOCASE
 """
 
+FIND_POWER_CONTAIN_STRING_QUERY = """
+SELECT * FROM powers
+LEFT JOIN locale_en ON locale_en.id == powers.name
+WHERE INSTR(lower(locale_en.data), ?) > 0
+"""
+
 class Powers(commands.GroupCog, name="power"):
     def __init__(self, bot: TheBot):
         self.bot = bot
@@ -37,6 +43,10 @@ class Powers(commands.GroupCog, name="power"):
     async def fetch_object_name(self, name: str) -> List[tuple]:
         name_bytes = name.encode('utf-8')
         async with self.bot.db.execute(FIND_OBJECT_NAME_QUERY, (name_bytes,)) as cursor:
+            return await cursor.fetchall()
+        
+    async def fetch_power_list(self, name: str) -> List[tuple]:
+        async with self.bot.db.execute(FIND_POWER_CONTAIN_STRING_QUERY, (name,)) as cursor:
             return await cursor.fetchall()
         
     async def build_power_embed(self, row):
@@ -104,6 +114,46 @@ class Powers(commands.GroupCog, name="power"):
         elif not use_object_name:
             logger.info("Failed to find '{}'", name)
             embed = discord.Embed(description=f"No powers with name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
+            await interaction.followup.send(embed=embed)
+    
+    async def build_list_embed(self, rows: List[tuple], name: str):
+        desc_string = ""
+        for row in rows:
+            real_name = row[2].decode("utf-8")
+            power_name = await database.translate_name(self.bot.db, row[1])
+            desc_string += f"{power_name} ({real_name})\n"
+        
+        embed = discord.Embed(
+            color=discord.Color.greyple(),
+            description=desc_string,
+        ).set_author(name=f"Searching for: {name}", icon_url=emojis.UNIVERSAL.url)
+
+        embeds = []
+        embeds.append(embed)
+
+        return embeds
+
+    @app_commands.command(name="list", description="Finds a list of power names that contain the string")
+    @app_commands.describe(name="The name of the powers to search for")
+    async def list(
+        self,
+        interaction: discord.Interaction,
+        name: str,
+    ):
+        await interaction.response.defer()
+        if type(interaction.channel) is DMChannel or type(interaction.channel) is PartialMessageable:
+            logger.info("{} requested power list for '{}'", interaction.user.name, name)
+        else:
+            logger.info("{} requested power list for '{}' in channel #{} of {}", interaction.user.name, name, interaction.channel.name, interaction.guild.name)
+        
+        rows = await self.fetch_power_list(name)
+        
+        if rows:
+            view = ItemView(await self.build_list_embed(rows, name))
+            await view.start(interaction)
+        else:
+            logger.info("Failed to find list for '{}'", name)
+            embed = discord.Embed(description=f"No powers containing name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
             await interaction.followup.send(embed=embed)
 
 async def setup(bot: TheBot):
