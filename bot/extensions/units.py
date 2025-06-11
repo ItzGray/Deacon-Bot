@@ -77,11 +77,11 @@ class Units(commands.GroupCog, name="unit"):
         stat_string = ""
         for stat in unit_stats:
             if stat[3] == "Set":
-                stat_string += f"{str(stat[4])} {stat[2]} {database.get_stat_emoji(stat[2])}\n"
+                stat_string += f"{stat[4]} {stat[2]} {database.get_stat_emoji(stat[2])}\n"
             elif stat[3] == "Multiply":
-                stat_string += f"x{str(stat[4])} {stat[2]} {database.get_stat_emoji(stat[2])}\n"
+                stat_string += f"x{stat[4]} {stat[2]} {database.get_stat_emoji(stat[2])}\n"
             elif stat[3] == "Multiply Add":
-                stat_string += f"x{str(stat[4] + 1)} {stat[2]} {database.get_stat_emoji(stat[2])}\n"
+                stat_string += f"x{round(stat[4] + 1, 2)} {stat[2]} {database.get_stat_emoji(stat[2])}\n"
             elif stat[3] == "Add" or stat[3] == "Set Add":
                 if stat[4] < 0:
                     disp_operator = ""
