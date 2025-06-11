@@ -86,7 +86,8 @@ class Units(commands.GroupCog, name="unit"):
             return await cursor.fetchall()
         
     async def fetch_object_name_with_filter(self, name: str, school: str, kind: str) -> List[tuple]:
-        async with self.bot.db.execute(FIND_OBJECT_NAME_WITH_FILTER_QUERY, (name,school,school,kind,kind)) as cursor:
+        name_bytes = name.encode('utf-8')
+        async with self.bot.db.execute(FIND_OBJECT_NAME_WITH_FILTER_QUERY, (name_bytes,school,school,kind,kind)) as cursor:
             return await cursor.fetchall()
         
     async def fetch_unit_list(self, name: str) -> List[tuple]:
