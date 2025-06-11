@@ -239,7 +239,6 @@ async def fetch_curve(db, curve):
 
 def get_item_icon_url(item_type: str) -> str:
     try:
-        logger.info(_ITEMS_STR.index(item_type))
         return _ITEMS[_ITEMS_STR.index(item_type)].url
     except:
         return ""
