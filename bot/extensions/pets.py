@@ -42,6 +42,12 @@ POWER_NAME_ID_QUERY_2 = """
 SELECT * FROM pet_powers WHERE pet_powers.id == ?
 """
 
+FIND_PET_CONTAIN_STRING_QUERY = """
+SELECT * FROM pets
+LEFT JOIN locale_en ON locale_en.id == pets.name
+WHERE INSTR(lower(locale_en.data), ?) > 0
+"""
+
 def remove_indices(lst, indices):
     return [value for index, value in enumerate(lst) if index not in indices]
 
@@ -58,6 +64,9 @@ class Pets(commands.GroupCog, name="pet"):
         async with self.bot.db.execute(FIND_OBJECT_NAME_QUERY, (name_bytes,)) as cursor:
             return await cursor.fetchall()
 
+    async def fetch_pet_list(self, name: str) -> List[tuple]:
+        async with self.bot.db.execute(FIND_PET_CONTAIN_STRING_QUERY, (name,)) as cursor:
+            return await cursor.fetchall()
     
     async def fetch_pet_talents(self, id: str) -> List[tuple]:
         talents = []
@@ -212,51 +221,45 @@ class Pets(commands.GroupCog, name="pet"):
             embed = discord.Embed(description=f"No pets with name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
             await interaction.followup.send(embed=embed)
 
-    #@app_commands.command(name="list", description="Finds a list of pet names that contain the string")
-    #@app_commands.describe(name="The name of the pets to search for")
-    async def list_names(
-        self, 
-        interaction: discord.Interaction, 
+    async def build_list_embed(self, rows: List[tuple], name: str):
+        desc_string = ""
+        for row in rows:
+            real_name = row[2].decode("utf-8")
+            pet_name = await database.translate_name(self.bot.db, row[1])
+            desc_string += f"{pet_name} ({real_name})\n"
+        
+        embed = discord.Embed(
+            color=discord.Color.greyple(),
+            description=desc_string,
+        ).set_author(name=f"Searching for: {name}", icon_url=emojis.UNIVERSAL.url)
+
+        embeds = []
+        embeds.append(embed)
+
+        return embeds
+
+    @app_commands.command(name="list", description="Finds a list of pet names that contain the string")
+    @app_commands.describe(name="The name of the pets to search for")
+    async def list(
+        self,
+        interaction: discord.Interaction,
         name: str,
     ):
         await interaction.response.defer()
         if type(interaction.channel) is DMChannel or type(interaction.channel) is PartialMessageable:
-            logger.info("{} searched for pets that contain '{}'", interaction.user.name, name)
+            logger.info("{} requested pet list for '{}'", interaction.user.name, name)
         else:
-            logger.info("{} searched for pets that contain '{}' in channel #{} of {}", interaction.user.name, name, interaction.channel.name, interaction.guild.name)
-
-        pets_containing_name = []
-        for pet in self.bot.pet_list:
-            pet: str
-
-            if name == '*' or name.lower() in pet.lower():
-                pets_containing_name.append(pet)
-
-        no_duplicate_pets = [*set(pets_containing_name)]
-        alphabetic_pets = sorted(no_duplicate_pets)
-
-        if len(alphabetic_pets) > 0:
-            chunks = [alphabetic_pets[i:i+15] for i in range(0, len(alphabetic_pets), 15)]
-            pet_embeds = []
-            for pet_chunk in chunks:
-                embed = (
-                    discord.Embed(
-                        description="\n".join(pet_chunk) or "\u200b",
-                    )
-                    .set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
-                )
-                pet_embeds.append(embed)
-
-            view = ItemView(pet_embeds)
-            await view.start(interaction)
-
-        else:
-            embed = discord.Embed(description=f"Unable to find {name}.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
-
-            await interaction.followup.send(embed=embed)
+            logger.info("{} requested pet list for '{}' in channel #{} of {}", interaction.user.name, name, interaction.channel.name, interaction.guild.name)
         
-
-
+        rows = await self.fetch_pet_list(name)
+        
+        if rows:
+            view = ItemView(await self.build_list_embed(rows, name))
+            await view.start(interaction)
+        else:
+            logger.info("Failed to find list for '{}'", name)
+            embed = discord.Embed(description=f"No pets containing name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
+            await interaction.followup.send(embed=embed)
 
 async def setup(bot: TheBot):
     await bot.add_cog(Pets(bot))
