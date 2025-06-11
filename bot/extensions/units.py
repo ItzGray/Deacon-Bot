@@ -113,7 +113,7 @@ class Units(commands.GroupCog, name="unit"):
             starting_talent_string += "Alert 1\n"
         
         title_string = ""
-        if unit_name == unit_title or unit_title == None:
+        if unit_name == unit_title or unit_title == "":
             title_string = ""
         else:
             title_string += "\n" + unit_title
@@ -294,7 +294,7 @@ class Units(commands.GroupCog, name="unit"):
         unit_image = row[3].decode("utf-8")
 
         title_string = ""
-        if unit_name == unit_title or unit_title == None:
+        if unit_name == unit_title or unit_title == "":
             title_string = ""
         else:
             title_string += "\n" + unit_title
