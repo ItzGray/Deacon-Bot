@@ -158,7 +158,7 @@ class Talents(commands.GroupCog, name="talent"):
             if ranks != -1:
                 rows = await self.fetch_talent_with_filter(name, ranks)
             else:
-                rows = await self.fetch_unit(name)
+                rows = await self.fetch_talent(name)
         
         if rows:
             embeds = [await self.build_talent_embed(row) for row in rows]
