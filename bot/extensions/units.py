@@ -35,6 +35,39 @@ FIND_UNIT_TALENTS_QUERY = """
 SELECT * FROM unit_talents WHERE unit_talents.unit == ?
 """
 
+FIND_UNITS_WITH_FILTER_QUERY = """
+SELECT * FROM units
+INNER JOIN locale_en ON locale_en.id == units.name
+WHERE locale_en.data == ? COLLATE NOCASE
+AND (? = 'Any' OR units.school = ?)
+AND (? = 'Any' OR units.kind = ?)
+COLLATE NOCASE
+"""
+
+FIND_OBJECT_NAME_WITH_FILTER_QUERY = """
+SELECT * FROM units
+INNER JOIN locale_en ON locale_en.id == units.name
+WHERE units.real_name == ? COLLATE NOCASE
+AND (? = 'Any' OR units.school = ?)
+AND (? = 'Any' OR units.kind = ?)
+COLLATE NOCASE
+"""
+
+FIND_UNIT_CONTAIN_STRING_QUERY = """
+SELECT * FROM units
+LEFT JOIN locale_en ON locale_en.id == units.name
+WHERE INSTR(lower(locale_en.data), ?) > 0
+"""
+
+FIND_UNITS_CONTAIN_STRING_WITH_FILTER_QUERY = """
+SELECT * FROM units
+INNER JOIN locale_en ON locale_en.id == units.name
+WHERE INSTR(lower(locale_en.data), ?) > 0
+AND (? = 'Any' OR units.school = ?)
+AND (? = 'Any' OR units.kind = ?)
+COLLATE NOCASE
+"""
+
 class Units(commands.GroupCog, name="unit"):
     def __init__(self, bot: TheBot):
         self.bot = bot
@@ -46,6 +79,22 @@ class Units(commands.GroupCog, name="unit"):
     async def fetch_object_name(self, name: str) -> List[tuple]:
         name_bytes = name.encode('utf-8')
         async with self.bot.db.execute(FIND_OBJECT_NAME_QUERY, (name_bytes,)) as cursor:
+            return await cursor.fetchall()
+        
+    async def fetch_unit_with_filter(self, name: str, school: str, kind: str) -> List[tuple]:
+        async with self.bot.db.execute(FIND_UNITS_WITH_FILTER_QUERY, (name,school,school,kind,kind)) as cursor:
+            return await cursor.fetchall()
+        
+    async def fetch_object_name_with_filter(self, name: str, school: str, kind: str) -> List[tuple]:
+        async with self.bot.db.execute(FIND_OBJECT_NAME_WITH_FILTER_QUERY, (name,school,school,kind,kind)) as cursor:
+            return await cursor.fetchall()
+        
+    async def fetch_unit_list(self, name: str) -> List[tuple]:
+        async with self.bot.db.execute(FIND_UNIT_CONTAIN_STRING_QUERY, (name,)) as cursor:
+            return await cursor.fetchall()
+    
+    async def fetch_unit_list_with_filter(self, name: str, school: str, kind: str) -> List[tuple]:
+        async with self.bot.db.execute(FIND_UNITS_CONTAIN_STRING_WITH_FILTER_QUERY, (name,school,school,kind,kind)) as cursor:
             return await cursor.fetchall()
         
     async def fetch_unit_stats(self, id: str) -> List[tuple]:
@@ -183,6 +232,8 @@ class Units(commands.GroupCog, name="unit"):
         self,
         interaction: discord.Interaction,
         name: str,
+        school: Optional[Literal["Any", "Buccaneer", "Privateer", "Witchdoctor", "Musketeer", "Swashbuckler"]] = "Any",
+        kind: Optional[Literal["Any", "Ally", "Enemy"]] = "Any",
         use_object_name: Optional[bool] = False,
     ):
         await interaction.response.defer()
@@ -192,13 +243,19 @@ class Units(commands.GroupCog, name="unit"):
             logger.info("{} requested unit '{}' in channel #{} of {}", interaction.user.name, name, interaction.channel.name, interaction.guild.name)
         
         if use_object_name:
-            rows = await self.fetch_object_name(name)
+            if school != "Any" or kind != "Any":
+                rows = await self.fetch_object_name_with_filter(name, school, kind)
+            else:
+                rows = await self.fetch_object_name(name)
             if not rows:
                 embed = discord.Embed(description=f"No units with object name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
                 await interaction.followup.send(embed=embed)
         
         else:
-            rows = await self.fetch_unit(name)
+            if school != "Any" or kind != "Any":
+                rows = await self.fetch_unit_with_filter(name, school, kind)
+            else:
+                rows = await self.fetch_unit(name)
         
         if rows:
             embeds = [await self.build_unit_embed(row) for row in rows]
@@ -209,6 +266,56 @@ class Units(commands.GroupCog, name="unit"):
         elif not use_object_name:
             logger.info("Failed to find '{}'", name)
             embed = discord.Embed(description=f"No units with name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
+            await interaction.followup.send(embed=embed)
+
+    async def build_list_embed(self, rows: List[tuple], name: str):
+        desc_string = ""
+        for row in rows:
+            real_name = row[2].decode("utf-8")
+            unit_name = await database.translate_name(self.bot.db, row[1])
+            unit_title = " - "
+            unit_title += await database.translate_name(self.bot.db, row[4])
+            if f" - {unit_name}" == unit_title or unit_title == " - ":
+                unit_title = ""
+            unit_school = row[5]
+            desc_string += f"{database.get_school_emoji(unit_school)} {unit_name}{unit_title} ({real_name})\n"
+        
+        embed = discord.Embed(
+            color=discord.Color.greyple(),
+            description=desc_string,
+        ).set_author(name=f"Searching for: {name}", icon_url=emojis.UNIVERSAL.url)
+
+        embeds = []
+        embeds.append(embed)
+
+        return embeds
+    
+    @app_commands.command(name="list", description="Finds a list of units that contain a given string")
+    @app_commands.describe(name="The name of the items to search for")
+    async def list(
+        self,
+        interaction: discord.Interaction,
+        name: str,
+        school: Optional[Literal["Any", "Buccaneer", "Privateer", "Witchdoctor", "Musketeer", "Swashbuckler"]] = "Any",
+        kind: Optional[Literal["Any", "Ally", "Enemy"]] = "Any",
+    ):
+        await interaction.response.defer()
+        if type(interaction.channel) is DMChannel or type(interaction.channel) is PartialMessageable:
+            logger.info("{} requested unit list for '{}'", interaction.user.name, name)
+        else:
+            logger.info("{} requested unit list for '{}' in channel #{} of {}", interaction.user.name, name, interaction.channel.name, interaction.guild.name)
+        
+        if school != "Any" or kind != "Any":
+            rows = await self.fetch_unit_list_with_filter(name, school, kind)
+        else:
+            rows = await self.fetch_unit_list(name)
+        
+        if rows:
+            view = ItemView(await self.build_list_embed(rows, name))
+            await view.start(interaction)
+        else:
+            logger.info("Failed to find list for '{}'", name)
+            embed = discord.Embed(description=f"No units containing name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
             await interaction.followup.send(embed=embed)
     
     async def calc_unit_stats(self, curve, modifiers: List[tuple], level: int) -> List[tuple]:
@@ -354,6 +461,8 @@ class Units(commands.GroupCog, name="unit"):
         interaction: discord.Interaction,
         name: str,
         level: int,
+        school: Optional[Literal["Any", "Buccaneer", "Privateer", "Witchdoctor", "Musketeer", "Swashbuckler"]] = "Any",
+        kind: Optional[Literal["Any", "Ally", "Enemy"]] = "Any",
         use_object_name: Optional[bool] = False,
     ):
         await interaction.response.defer()
@@ -363,13 +472,19 @@ class Units(commands.GroupCog, name="unit"):
             logger.info("{} requested unit stats for '{}' at level {} in channel #{} of {}", interaction.user.name, name, level, interaction.channel.name, interaction.guild.name)
         
         if use_object_name:
-            rows = await self.fetch_object_name(name)
+            if school != "Any" or kind != "Any":
+                rows = await self.fetch_object_name_with_filter(name, school, kind)
+            else:
+                rows = await self.fetch_object_name(name)
             if not rows:
                 embed = discord.Embed(description=f"No units with object name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
                 await interaction.followup.send(embed=embed)
         
         else:
-            rows = await self.fetch_unit(name)
+            if school != "Any" or kind != "Any":
+                rows = await self.fetch_unit_with_filter(name, school, kind)
+            else:
+                rows = await self.fetch_unit(name)
 
         if rows:
             embeds = [await self.build_calc_embed(row, level) for row in rows]
