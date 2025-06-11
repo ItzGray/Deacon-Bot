@@ -65,11 +65,11 @@ class Units(commands.GroupCog, name="unit"):
         unit_image = row[3].decode("utf-8")
 
         unit_school = row[5]
-        unit_dmg_type = row[7]
-        unit_primary_stat = database.translate_stat_flags(int(row[8]))
-        unit_beast_flag = row[9]
-        unit_undead_flag = row[10]
-        unit_bird_flag = row[11]
+        unit_dmg_type = row[6]
+        unit_primary_stat = database.translate_stat_flags(int(row[7]))
+        unit_beast_flag = row[8]
+        unit_undead_flag = row[9]
+        unit_bird_flag = row[10]
 
         unit_stats = await self.fetch_unit_stats(unit_id)
         unit_talents = await self.fetch_unit_talents(unit_id)
@@ -107,9 +107,9 @@ class Units(commands.GroupCog, name="unit"):
                     starting_power_string += power_name + " " + " (" + object_name + ")\n"
                 elif talent[5] == "Trained":
                     trained_power_string += power_name + " " + " (" + object_name + ")\n"
-        if row[12] == 656670 and "Witch Hunter" not in trained_talent_string:
+        if row[11] == 656670 and "Witch Hunter" not in trained_talent_string:
             trained_talent_string += "Witch Hunter 2\n"
-        if row[12] == 656667 and "Alert" not in starting_talent_string:
+        if row[11] == 656667 and "Alert" not in starting_talent_string:
             starting_talent_string += "Alert 1\n"
         
         title_string = ""
@@ -213,8 +213,11 @@ class Units(commands.GroupCog, name="unit"):
                 last_stat = stat
             else:
                 stat_count += 1
-        stats.append(stat)
-        stat_counts.append(stat_count)
+        try:
+            stats.append(stat)
+            stat_counts.append(stat_count)
+        except: 
+            pass
         stat = 0
         while stat < len(curve_stats):
             curr_stat = curve_stats[stat]
@@ -297,7 +300,7 @@ class Units(commands.GroupCog, name="unit"):
             title_string += "\n" + unit_title
 
         unit_school = row[5]
-        unit_curve = row[12]
+        unit_curve = row[11]
 
         unit_modifiers = await self.fetch_unit_stats(unit_id)
 
