@@ -51,7 +51,7 @@ class Powers(commands.GroupCog, name="power"):
 
         embed = (
             discord.Embed(
-                color=database.make_school_color(0),
+                color=discord.Color.greyple(),
             )
             .set_author(name=f"{power_name}\n({real_name}: {power_id})")
             .add_field(name="Description", value=power_desc, inline=False)

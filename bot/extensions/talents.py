@@ -73,7 +73,7 @@ class Talents(commands.GroupCog, name="talent"):
         
         embed = (
             discord.Embed(
-                color=database.make_school_color(0),
+                color=discord.Color.greyple(),
             )
             .set_author(name=f"{talent_name}\n({real_name}: {talent_id})")
             .add_field(name="\u200b", value="\u200b", inline=True)
