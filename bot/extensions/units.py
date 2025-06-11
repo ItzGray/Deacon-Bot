@@ -139,6 +139,9 @@ class Units(commands.GroupCog, name="unit"):
                     trained_talent_string += talent_name + " " + str(talent[4]) + "\n"
             elif talent[2] == "Power":
                 power_name, object_name = await database.translate_power_name(self.bot.db, talent[3])
+                if object_name == "":
+                    logger.info(f"Power ID {talent[3]} unnamed")
+                    continue
                 if talent[5] == "Template" or talent[5] == "Unknown":
                     starting_power_string += power_name + " " + " (" + object_name + ")\n"
                 elif talent[5] == "Trained":
@@ -192,7 +195,15 @@ class Units(commands.GroupCog, name="unit"):
         embed.add_field(name="\u200b", value="\u200b", inline=True)
         
         if starting_power_string != "":
-            embed.add_field(name="Starting Powers", value=starting_power_string, inline=True)
+            if len(starting_power_string) < 1024:
+                embed.add_field(name="Starting Powers", value=starting_power_string, inline=True)
+            else:
+                first_starting_power_string = starting_power_string[:1024]
+                second_starting_power_string = starting_power_string[1024:]
+                last_indent = first_starting_power_string.split("\n")[-1]
+                first_starting_power_string = first_starting_power_string.replace(last_indent, "", 1)
+                embed.add_field(name="Starting Powers", value=first_starting_power_string, inline=True)
+                embed.add_field(name="\u200b", value=f"{last_indent}{second_starting_power_string}", inline=True)
         
         if trained_power_string != "":
             embed.add_field(name="Trainable Powers", value=trained_power_string, inline=True)

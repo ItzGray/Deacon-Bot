@@ -211,6 +211,7 @@ async def translate_talent_name(db, id: int) -> str:
 
 async def translate_power_name(db, id: int) -> str:
     name = ""
+    object_name = ""
     async with db.execute(
         "SELECT * FROM powers WHERE id == ?", (id,)
     ) as cursor:
