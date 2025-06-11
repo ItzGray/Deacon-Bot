@@ -89,6 +89,15 @@ def move_images_to_bot():
         print(f"Extracting {filename} from Mob-WorldData.wad")
         with open(output_file_path, "wb") as output_file:
             output_file.write(data)
+    for file in mob_worlddata.iter_glob("Character/**/Portrait/*.dds"):
+        if file in tex_files_done:
+            continue
+        data = mob_worlddata[file]
+        filename = file.split("/")[-1]
+        output_file_path = output_path / filename
+        print(f"Extracting {filename} from Mob-WorldData.wad")
+        with open(output_file_path, "wb") as output_file:
+            output_file.write(data)
     for file in player_worlddata.iter_glob("Character/Player/Icons/**/*.tex"):
         filename = file.split("/")[-1].split(".")[0]
         print(f"Extracting {filename} from Player-WorldData.wad")
