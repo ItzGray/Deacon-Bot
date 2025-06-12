@@ -54,7 +54,10 @@ class Powers(commands.GroupCog, name="power"):
         real_name = row[2].decode("utf-8")
 
         power_name = await database.translate_name(self.bot.db, row[1])
-        power_image = row[3].decode("utf-8")
+        try:
+            power_image = row[3].decode("utf-8")
+        except:
+            power_image = row[3]
         power_desc = await database.translate_name(self.bot.db, row[4])
 
         pvp_tag = row[5]
