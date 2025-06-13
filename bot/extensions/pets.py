@@ -215,7 +215,12 @@ class Pets(commands.GroupCog, name="pet"):
             sorted_embeds = sorted(embeds, key=lambda embed: embed[0].author.name)
             unzipped_embeds, unzipped_images = list(zip(*sorted_embeds))
             view = ItemView(unzipped_embeds, files=unzipped_images)
-            await view.start(interaction)
+            try:
+                await view.start(interaction)
+            except discord.errors.HTTPException:
+                logger.info("List for '{}' too long, sending back error message")
+                embed = discord.Embed(description=f"Pet list for {name} too long! Try again with a more specific keyword.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
+                await interaction.followup.send(embed=embed)
         elif not use_object_name:
             logger.info("Failed to find '{}'", name)
             embed = discord.Embed(description=f"No pets with name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)

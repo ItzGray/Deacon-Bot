@@ -266,7 +266,12 @@ class Items(commands.GroupCog, name="item"):
         
         if rows:
             view = ItemView(await self.build_list_embed(rows, name))
-            await view.start(interaction)
+            try:
+                await view.start(interaction)
+            except discord.errors.HTTPException:
+                logger.info("List for '{}' too long, sending back error message")
+                embed = discord.Embed(description=f"Item list for {name} too long! Try again with a more specific keyword.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
+                await interaction.followup.send(embed=embed)
         else:
             logger.info("Failed to find list for '{}'", name)
             embed = discord.Embed(description=f"No items containing name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
