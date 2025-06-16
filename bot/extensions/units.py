@@ -164,12 +164,6 @@ class Units(commands.GroupCog, name="unit"):
             desc_string += f"{database.get_stat_emoji(unit_primary_stat[flag])}/"
         desc_string = desc_string[:-1]
         desc_string += "\n"
-        if unit_beast_flag == 1:
-            desc_string += "Boosted by the Beastmaster Banners\n"
-        if unit_undead_flag == 1:
-            desc_string += "Boosted by Baron Samedi's Standard\n"
-        if unit_bird_flag == 1:
-            desc_string += "Boosted by the Imperator's Standard\n"
 
         embed = (
             discord.Embed(
@@ -208,6 +202,16 @@ class Units(commands.GroupCog, name="unit"):
         if trained_power_string != "":
             embed.add_field(name="Trainable Powers", value=trained_power_string, inline=True)
             embed.add_field(name="\u200b", value="\u200b", inline=True)
+
+        banner_string = ""
+        if unit_beast_flag == 1:
+            banner_string += "Beastmaster Banners\n"
+        if unit_undead_flag == 1:
+            banner_string += "Baron Samedi's Standard\n"
+        if unit_bird_flag == 1:
+            banner_string += "Imperator's Standard\n"
+        if banner_string != "":
+            embed.add_field(name="Banner Boosts", value=banner_string, inline=False)
 
         discord_file = None
         if unit_image:
