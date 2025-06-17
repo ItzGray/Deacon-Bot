@@ -39,3 +39,20 @@ RING = "" # Not done yet
 
 PHYSICAL_DAMAGE = PartialEmoji.from_str("<:dam_PHYS:1382187865986826360>")
 MAGICAL_DAMAGE = PartialEmoji.from_str("<:dam_MAGI:1382187863940010127>")
+
+TIMER = PartialEmoji.from_str("<:ot_TIM:1382821702899073205>")
+BUFF = PartialEmoji.from_str("<:ot_BG:1382828662520549729>")
+DEBUFF = PartialEmoji.from_str("<:ot_BB:1382828661086097448>")
+ENEMY_TERRITORY = PartialEmoji.from_str("<:ot_ET:1382881902674837574>")
+TALENT_STAR = PartialEmoji.from_str("<:ot_STAR:1382963963788132402>")
+
+SHOOTY = PartialEmoji.from_str("<:ot_SHOOT:1382828663958933634>")
+SLASHY = PartialEmoji.from_str("<:ot_SLASH:1382828665141854298>")
+SMASHY = PartialEmoji.from_str("<:ot_SMASH:1382828666312196177>")
+STABBY = PartialEmoji.from_str("<:ot_STAB:1382828667721486406>")
+STAFFY = PartialEmoji.from_str("<:ot_STAFF:1382828668920926258>")
+
+BLEED = PartialEmoji.from_str("<:ot_BLEED:1384347995167920271>")
+POISON = PartialEmoji.from_str("<:ot_POIS:1384347997030187211>")
+
+PRIMARY_STATS = f"{STRENGTH}/{AGILITY}/{WILL}"

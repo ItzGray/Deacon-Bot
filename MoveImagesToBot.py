@@ -154,6 +154,20 @@ def move_images_to_bot():
         print(f"Extracting {filename} from Root.wad")
         with open(output_file_path, "wb") as output_file:
             output_file.write(data)
+    for file in root.iter_glob("GUI/Powers/*.dds"):
+        data = root[file]
+        filename = file.split("/")[-1]
+        output_file_path = output_path / filename
+        print(f"Extracting {filename} from Root.wad")
+        with open(output_file_path, "wb") as output_file:
+            output_file.write(data)
+    for file in root.iter_glob("GUI/Icons/*.dds"):
+        data = root[file]
+        filename = file.split("/")[-1]
+        output_file_path = output_path / filename
+        print(f"Extracting {filename} from Root.wad")
+        with open(output_file_path, "wb") as output_file:
+            output_file.write(data)
     for file in root.iter_glob("Character/Player/Icons/**/*.dds"):
         data = root[file]
         filename = file.split("/")[-1]

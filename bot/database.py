@@ -81,6 +81,10 @@ _STATS = [
     GUILE,
     GUTS,
     PET_POWER,
+    PET_POWER,
+    PHYSICAL_DAMAGE,
+    MAGICAL_DAMAGE,
+    PRIMARY_STATS,
 ]
 
 _STATS_STR = [
@@ -103,7 +107,69 @@ _STATS_STR = [
     "Guile",
     "Guts",
     "Power",
+    "Pet Power",
+    "Physical Damage",
+    "Magical Damage",
+    "Primary Stat",
 ]
+
+_WEAPON_TYPES = [
+    SHOOTY,
+    SLASHY,
+    SMASHY,
+    STABBY,
+    STAFFY,
+]
+
+_OTHER = [
+    TIMER,
+    BUFF,
+    DEBUFF,
+    ENEMY_TERRITORY,
+    TALENT_STAR,
+]
+
+_STAT_ICONS = {
+    "DAMAGE_BASE_ICON": WEAPON_POWER,
+    "ARMOR_ICON": ARMOR,
+    "CRIT_RATING_ICON": CRIT,
+    "ACCURACY_ICON": ACCURACY,
+    "AGILITY_ICON": AGILITY,
+    "STRENGTH_ICON": STRENGTH,
+    "SPELL_POWER_ICON": SPELL_POWER,
+    "DODGE_ICON": DODGE,
+    "ATTACK_RANGE_ICON": ATTACK_RANGE,
+    "MOVE_RANGE_ICON": MOVEMENT_RANGE,
+    "CURRENT_HP_ICON": HEALTH,
+    "DAMAGE_PHYSICAL_ICON": PHYSICAL_DAMAGE,
+    "MAX_HP_ICON": HEALTH,
+    "ICON_MOVEMENT_RANGE": MOVEMENT_RANGE,
+}
+
+_IMG_ICONS = {
+    "Icon_Timer_Med": TIMER,
+    "Icon_Buff_Bad": DEBUFF,
+    "Icon_Buff_Good": BUFF,
+    "Icon_Area_Enemy_Territory_Med": ENEMY_TERRITORY,
+    "Icon_Attribute_Slash_Med": SLASHY,
+    "Icon_Attribute_Axe_Med": SMASHY,
+    "Icon_Attribute_Kris_Med": STABBY,
+    "Icon_Attribute_Pistol_Med": SHOOTY,
+    "Icon_Attribute_Staff_Med": STAFFY,
+    "Icon_Talent_Star_Yellow_01": TALENT_STAR,
+}
+
+_DOT_ICONS = {
+    "Bleed": BLEED,
+    "Poison": POISON,
+    "Heal": HEALTH,
+}
+
+PVP_TAG = {
+    0: "Allowed Everywhere",
+    1: "No PvP",
+    2: "PvP Only",
+}
 
 class StatFlags(IntFlag):
     Strength = 1 << 0
@@ -144,17 +210,15 @@ def translate_stat_flags(flag: int) -> List[str]:
     return flags
 
 def _fnv_1a(data: bytes) -> int:
+    if isinstance(data, str):
+        data = data.encode()
+    
     state = 0xCBF2_9CE4_8422_2325
     for b in data:
         state ^= b
         state *= 0x0000_0100_0000_01B3
         state &= 0xFFFF_FFFF_FFFF_FFFF
     return state >> 1
-
-
-_STAT_DISPLAY_TABLE = {
-    # Maybe do things with this later
-}
 
 def translate_school(school: int) -> discord.PartialEmoji:
     return _SCHOOLS[school]
@@ -221,6 +285,15 @@ async def translate_power_name(db, id: int) -> str:
             if name == None:
                 name = object_name
     return name, object_name
+
+async def lang_lookup_by_id(db, hash: int) -> str:
+    name = ""
+    async with db.execute(
+        "SELECT * FROM locale_en WHERE id == ?", (hash,)
+    ) as cursor:
+        async for row in cursor:
+            name = row[1]
+    return name
 
 async def fetch_curve(db, curve):
     stats = []

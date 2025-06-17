@@ -101,7 +101,52 @@ class Talents(commands.GroupCog, name="talent"):
             talent_rank_descs.append(await database.translate_name(self.bot.db, rank[3]))
             talent_rank_reqs.append(rank[4])
         for rank in range(len(talent_rank_nums)):
-            talent_rank_strings.append(talent_rank_descs[rank])
+            talent_rank_desc = talent_rank_descs[rank]
+
+            while "&" in talent_rank_desc:
+                try:
+                    desc_split = talent_rank_desc.split("&")[2]
+                except:
+                    break
+                else:
+                    desc_split = talent_rank_desc.split("&")[1]
+                    desc_split_hash = database._fnv_1a(desc_split)
+                    lang_lookup = await database.lang_lookup_by_id(self.bot.db, desc_split_hash)
+                    if "<img src" in lang_lookup:
+                        img_split = lang_lookup.split("'")[1]
+                        slash_split = img_split.split("/")[-1]
+                        ext_split = slash_split.split(".")[0]
+                        try:
+                            real_img = database._IMG_ICONS[ext_split]
+                        except:
+                            pass
+                        else:
+                            lang_lookup = lang_lookup.replace(lang_lookup, f"{real_img}")
+
+                    talent_rank_desc = talent_rank_desc.replace(f"&{desc_split}&", lang_lookup)
+
+            while "$" in talent_rank_desc:
+                try:
+                    desc_split = talent_rank_desc.split("$")[2]
+                except:
+                    break
+                else:
+                    desc_split = talent_rank_desc.split("$")[1]
+                    try:
+                        desc_img = database._STAT_ICONS[desc_split]
+                    except:
+                        pass
+                    else:
+                        talent_rank_desc = talent_rank_desc.replace(f"${desc_split}$", f"{desc_img}")
+                talent_rank_desc = talent_rank_desc.replace(f"${desc_split}$", desc_split)
+
+            talent_rank_desc = talent_rank_desc.replace("<br>", "\n")
+            talent_rank_desc = talent_rank_desc.replace("\\n", "\n")
+            talent_rank_desc = talent_rank_desc.replace("%%", "%")
+            talent_rank_desc = talent_rank_desc.replace("#1:%.0", "")
+            talent_rank_desc = talent_rank_desc.replace("#2:%.0", "")
+            talent_rank_desc = talent_rank_desc.replace("%.0", "")
+            talent_rank_strings.append(talent_rank_desc)
             if talent_rank_reqs[rank] != None:
                 talent_rank_strings[rank] += "\nLevel Requirement for Units: " + str(talent_rank_reqs[rank])
         
@@ -151,7 +196,7 @@ class Talents(commands.GroupCog, name="talent"):
         if use_object_name:
             rows = await self.fetch_object_name(name)
             if not rows:
-                embed = discord.Embed(description=f"No units with object name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
+                embed = discord.Embed(description=f"No talents with object name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
                 await interaction.followup.send(embed=embed)
         
         else:
@@ -209,7 +254,12 @@ class Talents(commands.GroupCog, name="talent"):
         
         if rows:
             view = ItemView(await self.build_list_embed(rows, name))
-            await view.start(interaction)
+            try:
+                await view.start(interaction)
+            except discord.errors.HTTPException:
+                logger.info("List for '{}' too long, sending back error message")
+                embed = discord.Embed(description=f"Talent list for {name} too long! Try again with a more specific keyword.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
+                await interaction.followup.send(embed=embed)
         else:
             logger.info("Failed to find list for '{}'", name)
             embed = discord.Embed(description=f"No talents containing name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
