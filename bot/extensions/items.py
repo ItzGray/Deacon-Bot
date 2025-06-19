@@ -115,9 +115,9 @@ class Items(commands.GroupCog, name="item"):
         if weapon_types != []:
             for type in weapon_types:
                 if "Damage" in str(type[3]):
-                    stat_string += "Does " + type[3] + "\n"
+                    stat_string += "Does " + type[3] + f" {database.get_stat_emoji(type[3])}\n"
                 elif isinstance(type[3], str):
-                    stat_string += type[3] + " Weapon\n"
+                    stat_string += type[3] + f" Weapon {database.get_weapon_type_emoji(type[3])}\n"
                 elif isinstance(type[3], int) and type[3] != None:
                     primary_stat_flags = database.translate_stat_flags(type[3])
                     stat_string += "Boosts from "

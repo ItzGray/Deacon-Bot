@@ -158,7 +158,7 @@ class Units(commands.GroupCog, name="unit"):
             title_string += "\n" + unit_title
 
         desc_string = ""
-        desc_string += "Does " + unit_dmg_type + "\n"
+        desc_string += "Does " + unit_dmg_type + f" {database.get_stat_emoji(unit_dmg_type)}\n"
         desc_string += "Boosts from "
         for flag in range(len(unit_primary_stat)):
             desc_string += f"{database.get_stat_emoji(unit_primary_stat[flag])}/"

@@ -121,6 +121,14 @@ _WEAPON_TYPES = [
     STAFFY,
 ]
 
+_WEAPON_TYPES_STR = [
+    "Shooty",
+    "Slashy",
+    "Smashy",
+    "Stabby",
+    "Staffy",
+]
+
 _OTHER = [
     TIMER,
     BUFF,
@@ -334,6 +342,14 @@ def get_stat_emoji(stat: str):
         return _STATS[_STATS_STR.index(stat)]
     except:
         return ""
+
+def get_weapon_type_emoji(type: str) -> str:
+    weapon_types = type.split("/")
+    weapon_type_string = ""
+    for weapon_type in weapon_types:
+        weapon_type_string += f"{_WEAPON_TYPES[_WEAPON_TYPES_STR.index(weapon_type)]}/"
+    weapon_type_string = weapon_type_string[:-1]
+    return weapon_type_string
 
 def _make_placeholders(count: int) -> str:
     return ", ".join(["?"] * count)
