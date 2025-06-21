@@ -22,6 +22,8 @@ HELP_DESCRIPTION = """
 **/talent list**: Finds a list of talents containing a given string. Parameters: Name, Ranks\n
 **/power find**: Finds the power as shown in the files. Parameters: Name\n
 **/power list**: Finds a list of powers containing a given string. Parameters: Name\n
+**/secret now**: Finds the current secret trainer.\n
+**/secret type**: Prints the day's schedule for a single secret trainer. Parameters: Trainer\n
 """
 
 class Help(commands.Cog):
