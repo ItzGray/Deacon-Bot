@@ -54,5 +54,6 @@ STAFFY = PartialEmoji.from_str("<:ot_STAFF:1382828668920926258>")
 
 BLEED = PartialEmoji.from_str("<:ot_BLEED:1384347995167920271>")
 POISON = PartialEmoji.from_str("<:ot_POIS:1384347997030187211>")
+CURSE = PartialEmoji.from_str("<:ot_CURS:1385128202078523412>")
 
 PRIMARY_STATS = f"{STRENGTH}/{AGILITY}/{WILL}"
