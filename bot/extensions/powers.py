@@ -210,7 +210,10 @@ class Powers(commands.GroupCog, name="power"):
                                 final_text += f"+ x{amounts[value]}{database.get_stat_emoji(dmg_stats[value])} "
                         final_text = final_text[2:-1]
                         final_text = f"({final_text})"
+                        if final_text == "()":
+                            final_text = ""
                         power_desc = power_desc.replace(f"${desc_split}$", final_text)
+                        count = 0
                     else:
                         ability_damage, ability_dmg_type = await database.get_ability_damage(self.bot.db, power_summons[-1])
                         power_desc = power_desc.replace(f"${desc_split}$", ability_damage)
@@ -250,6 +253,8 @@ class Powers(commands.GroupCog, name="power"):
                             final_text += f"+ x{amounts[value]}{database.get_stat_emoji(dmg_stats[value])} "
                     final_text = final_text[2:-1]
                     final_text = f"({final_text})"
+                    if final_text == "()":
+                        final_text = ""
                     power_desc = power_desc.replace(f"${desc_split}$", final_text)
                 if "eEffectIcon" in desc_split:
                     try:
@@ -281,6 +286,8 @@ class Powers(commands.GroupCog, name="power"):
                             final_text += f"+ x{amounts[value]}{database.get_stat_emoji(heal_stats[value])} "
                     final_text = final_text[2:-1]
                     final_text = f"({final_text})"
+                    if final_text == "()":
+                        final_text = ""
                     power_desc = power_desc.replace(f"${desc_split}$", final_text)
                 if "eBonus" in desc_split:
                     try:
@@ -297,6 +304,30 @@ class Powers(commands.GroupCog, name="power"):
                             bonuses.append(power_bonus)
                     power_desc = power_desc.replace(f"${desc_split}$", str(bonuses[bonus_num - 1]))
                     continue
+                if "eStatValue" in desc_split:
+                    try:
+                        value_num = int(desc_split[-1])
+                    except:
+                        value_num = 0
+                    operators = []
+                    dmg_stats = []
+                    amounts = []
+                    for value in range(len(power_mult_amounts)):
+                        if power_adjustment_nums[value] == value_num:
+                            operators.append(power_operators[value])
+                            dmg_stats.append(power_mult_stats[value])
+                            amounts.append(power_mult_amounts[value])
+                    final_text = ""
+                    for value in range(len(amounts)):
+                        if operators[value] == "Set" or operators[value] == "Multiply Add":
+                            final_text += f"+ x{amounts[value]}{database.get_stat_emoji(dmg_stats[value])} "
+                    final_text = final_text[2:-1]
+                    final_text = f"({final_text})"
+                    if final_text == "()":
+                        final_text = ""
+                    power_desc = power_desc.replace(f"${desc_split}$", final_text)
+                if "eTargetStatIcon" in desc_split:
+                    power_desc = power_desc.replace(f"${desc_split}$", f"{database.get_stat_emoji(power_stats[value_num])}")
                 if "eIcon" in desc_split:
                     try:
                         icon_num = int(desc_split[-1])
@@ -370,17 +401,40 @@ class Powers(commands.GroupCog, name="power"):
                     except:
                         pass
                     else:
-                        try:
-                            dmg_type = power_dmg_types[icon_num]
-                            dmg_type_text = ""
-                            if dmg_type == "Inherit":
-                                dmg_type_text = f"{database.get_stat_emoji('Physical Damage')}/{database.get_stat_emoji('Magical Damage')}"
-                            else:
-                                dmg_type_text = f"{database.get_stat_emoji(dmg_type)}"
-                            power_desc = power_desc.replace(f"${desc_split}$", f"{dmg_type_text} ")
-                            continue
-                        except:
+                        if "Trap" in power_types and count > 0:
                             pass
+                        else:
+                            try:
+                                dmg_type = power_dmg_types[icon_num]
+                                dmg_type_text = ""
+                                if dmg_type == "Inherit":
+                                    dmg_type_text = f"{database.get_stat_emoji('Physical Damage')}/{database.get_stat_emoji('Magical Damage')}"
+                                else:
+                                    dmg_type_text = f"{database.get_stat_emoji(dmg_type)}"
+                                power_desc = power_desc.replace(f"${desc_split}$", f"{dmg_type_text} ")
+                                count += 1
+                                continue
+                            except:
+                                pass
+                    try:
+                        for summon in range(len(power_summons)):
+                            if power_types[summon] == "Trap":
+                                curr_summon = await database.translate_name(self.bot.db, power_summons[summon])
+                                curr_summon_obj_name = ""
+                            elif power_types[summon] == "Summon":
+                                curr_summon, curr_summon_obj_name = await database.translate_unit_name(self.bot.db, power_summons[summon])
+                        test = curr_summon
+                    except:
+                        pass
+                    else:
+                        if curr_summon_obj_name == "":
+                            if power_desc[power_desc.find(f"${desc_split}$") - 1] == " ": 
+                                power_desc = power_desc.replace(f"${desc_split}$", f"{curr_summon} ")
+                            else:
+                                power_desc = power_desc.replace(f"${desc_split}$", f" {curr_summon} ")
+                        else:
+                            power_desc = power_desc.replace(f"${desc_split}$", f"{curr_summon} ({curr_summon_obj_name}) ")
+                        continue
                     try:
                         test_mult = heal_stats[0]
                     except:

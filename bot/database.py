@@ -152,6 +152,7 @@ _STAT_ICONS = {
     "DAMAGE_PHYSICAL_ICON": PHYSICAL_DAMAGE,
     "MAX_HP_ICON": HEALTH,
     "ICON_MOVEMENT_RANGE": MOVEMENT_RANGE,
+    "WILL_ICON": WILL,
 }
 
 _IMG_ICONS = {
@@ -287,6 +288,18 @@ async def translate_power_name(db, id: int) -> str:
     object_name = ""
     async with db.execute(
         "SELECT * FROM powers WHERE id == ?", (id,)
+    ) as cursor:
+        async for row in cursor:
+            name = await translate_name(db, row[1])
+            object_name = row[2].decode("utf-8")
+            if name == None:
+                name = object_name
+    return name, object_name
+
+async def translate_unit_name(db, id: int) -> str:
+    name = ""
+    async with db.execute(
+        "SELECT * FROM units WHERE id == ?", (id,)
     ) as cursor:
         async for row in cursor:
             name = await translate_name(db, row[1])
