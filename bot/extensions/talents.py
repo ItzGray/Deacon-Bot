@@ -52,6 +52,10 @@ AND (? = -1 OR talents.ranks = ?)
 COLLATE NOCASE
 """
 
+FIND_TALENT_STATS_QUERY = """
+SELECT * FROM talent_stats WHERE talent_stats.talent == ?
+"""
+
 class Talents(commands.GroupCog, name="talent"):
     def __init__(self, bot: TheBot):
         self.bot = bot
@@ -81,28 +85,45 @@ class Talents(commands.GroupCog, name="talent"):
         async with self.bot.db.execute(FIND_TALENT_RANKS_QUERY, (id,)) as cursor:
             return await cursor.fetchall()
     
+    async def fetch_talent_stats(self, id: str) -> List[tuple]:
+        async with self.bot.db.execute(FIND_TALENT_STATS_QUERY, (id,)) as cursor:
+            return await cursor.fetchall()
+    
     async def build_talent_embed(self, row):
         talent_id = row[0]
         real_name = row[2].decode("utf-8")
 
         talent_name = await database.translate_name(self.bot.db, row[1])
-        talent_image = row[3].decode("utf-8")
+        try:
+            talent_image = row[3].decode("utf-8")
+        except:
+            talent_image = ""
 
         talent_rank_num = row[4]
 
         talent_ranks = await self.fetch_talent_ranks(talent_id)
 
+        talent_stats = await self.fetch_talent_stats(talent_id)
+
         talent_rank_nums = []
         talent_rank_descs = []
         talent_rank_reqs = []
         talent_rank_strings = []
+        talent_stat_ranks = []
+        talent_stat_operators = []
+        talent_stat_stats = []
+        talent_stat_values = []
         for rank in talent_ranks:
             talent_rank_nums.append(rank[2])
             talent_rank_descs.append(await database.translate_name(self.bot.db, rank[3]))
             talent_rank_reqs.append(rank[4])
+        for stat in talent_stats:
+            talent_stat_ranks.append(stat[2])
+            talent_stat_operators.append(stat[3])
+            talent_stat_stats.append(stat[4])
+            talent_stat_values.append(stat[5])
         for rank in range(len(talent_rank_nums)):
             talent_rank_desc = talent_rank_descs[rank]
-
             while "&" in talent_rank_desc:
                 try:
                     desc_split = talent_rank_desc.split("&")[2]
@@ -138,12 +159,19 @@ class Talents(commands.GroupCog, name="talent"):
                         pass
                     else:
                         talent_rank_desc = talent_rank_desc.replace(f"${desc_split}$", f"{desc_img}")
+                    if "eBonus" in desc_split:
+                        talent_rank_desc = talent_rank_desc.replace(f"${desc_split}$", f"{talent_stat_values[rank]}")
+                    if "ePercent" in desc_split:
+                        talent_rank_desc = talent_rank_desc.replace(f"${desc_split}$", f"{int(talent_stat_values[rank] * 100)}")
+                    if "eIcon" in desc_split:
+                        talent_rank_desc = talent_rank_desc.replace(f"${desc_split}$", f"{database.get_stat_emoji(talent_stat_stats[rank])}")
                 talent_rank_desc = talent_rank_desc.replace(f"${desc_split}$", desc_split)
 
             talent_rank_desc = talent_rank_desc.replace("<br>", "\n")
             talent_rank_desc = talent_rank_desc.replace("\\n", "\n")
             talent_rank_desc = talent_rank_desc.replace("%%", "%")
             talent_rank_desc = talent_rank_desc.replace("#1:%.0", "")
+            talent_rank_desc = talent_rank_desc.replace("#1:%+.0", "+")
             talent_rank_desc = talent_rank_desc.replace("#2:%.0", "")
             talent_rank_desc = talent_rank_desc.replace("%.0", "")
             talent_rank_strings.append(talent_rank_desc)
