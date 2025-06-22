@@ -165,9 +165,8 @@ class Powers(commands.GroupCog, name="power"):
                     for percent in range(len(power_percents)):
                         if power_percents[percent] != -1:
                             power_percent = power_percents[percent]
-                            if power_types[percent] == "Debuff":
+                            if power_dmg_types[percent] == "Debuff":
                                 debuff = True
-                                power_percent = 100 - power_percent
                             percents.append(power_percent)
                     power_desc = power_desc.replace(f"${desc_split}$", str(percents[percent_num - 1]))
                     continue
@@ -191,29 +190,30 @@ class Powers(commands.GroupCog, name="power"):
                     final_text = final_text[2:-1]
                     final_text = f"({final_text})"
                     power_desc = power_desc.replace(f"${desc_split}$", final_text)
-                    continue
                 if "eDamage" in desc_split:
                     try:
                         value_num = int(desc_split[-1])
                     except:
                         value_num = 0
-                    operators = []
-                    dmg_stats = []
-                    amounts = []
-                    for value in range(len(power_mult_amounts)):
-                        if power_adjustment_nums[value] == value_num:
-                            operators.append(power_operators[value])
-                            dmg_stats.append(power_mult_stats[value])
-                            amounts.append(power_mult_amounts[value])
-                    final_text = ""
-                    for value in range(len(amounts)):
-                        if operators[value] == "Set" or operators[value] == "Multiply Add":
-                            final_text += f"+ x{amounts[value]}{database.get_stat_emoji(dmg_stats[value])} "
-                    final_text = final_text[2:-1]
-                    final_text = f"({final_text})"
                     if "eAbility" not in desc_split:
+                        operators = []
+                        dmg_stats = []
+                        amounts = []
+                        for value in range(len(power_mult_amounts)):
+                            if power_adjustment_nums[value] == value_num:
+                                operators.append(power_operators[value])
+                                dmg_stats.append(power_mult_stats[value])
+                                amounts.append(power_mult_amounts[value])
+                        final_text = ""
+                        for value in range(len(amounts)):
+                            if operators[value] == "Set" or operators[value] == "Multiply Add":
+                                final_text += f"+ x{amounts[value]}{database.get_stat_emoji(dmg_stats[value])} "
+                        final_text = final_text[2:-1]
+                        final_text = f"({final_text})"
                         power_desc = power_desc.replace(f"${desc_split}$", final_text)
-                        continue
+                    else:
+                        ability_damage, ability_dmg_type = await database.get_ability_damage(self.bot.db, power_summons[-1])
+                        power_desc = power_desc.replace(f"${desc_split}$", ability_damage)
                 if "eModifyPercent" in desc_split:
                     percents = []
                     for percent in power_percents:
@@ -251,8 +251,16 @@ class Powers(commands.GroupCog, name="power"):
                     final_text = final_text[2:-1]
                     final_text = f"({final_text})"
                     power_desc = power_desc.replace(f"${desc_split}$", final_text)
-                    continue
                 if "eEffectIcon" in desc_split:
+                    try:
+                        value_num = int(desc_split[-1])
+                    except:
+                        try:
+                            value_test = value_num
+                        except:
+                            value_num = 0
+                        else:
+                            pass
                     power_desc = power_desc.replace(f"${desc_split}$", f"{database._DOT_ICONS[power_dmg_types[value_num]]}")
                 if "eHeal" in desc_split:
                     try:
@@ -274,6 +282,20 @@ class Powers(commands.GroupCog, name="power"):
                     final_text = final_text[2:-1]
                     final_text = f"({final_text})"
                     power_desc = power_desc.replace(f"${desc_split}$", final_text)
+                if "eBonus" in desc_split:
+                    try:
+                        bonus_num = int(desc_split[-1])
+                    except:
+                        bonus_num = 1
+                    bonuses = []
+                    for bonus in range(len(power_percents)):
+                        if power_percents[bonus] != -1:
+                            power_bonus = power_percents[bonus]
+                            if power_dmg_types[bonus] == "Debuff":
+                                debuff = True
+                            power_bonus = int(power_bonus / 100)
+                            bonuses.append(power_bonus)
+                    power_desc = power_desc.replace(f"${desc_split}$", str(bonuses[bonus_num - 1]))
                     continue
                 if "eIcon" in desc_split:
                     try:
@@ -306,12 +328,43 @@ class Powers(commands.GroupCog, name="power"):
                             power_desc = power_desc.replace(f"${desc_split}$", f"{stat_emojis[icon_num - 1]}")
                             continue
                     try:
+                        bonus_length = len(bonuses)
+                    except:
+                        pass
+                    else:
+                        if bonus_length > 0:
+                            stats = []
+                            for stat in range(len(power_stats)):
+                                if power_stats[stat] != "" and power_percents[stat] != -1:
+                                    stats.append(power_stats[stat])
+                            stat_emojis = []
+                            for stat in stats:
+                                stat_emojis.append(database.get_stat_emoji(stat))
+                            power_desc = power_desc.replace(f"${desc_split}$", f"{stat_emojis[icon_num - 1]}")
+                            continue
+                    try:
                         test_mult = stats[0]
                     except:
                         pass
                     else:
                         stat_icon = power_stats[icon_num]
                         power_desc = power_desc.replace(f"${desc_split}$", f"{database.get_stat_emoji(stat_icon)} ")
+                    try:
+                        test = ability_dmg_type
+                    except:
+                        pass
+                    else:
+                        try:
+                            dmg_type = ability_dmg_type
+                            dmg_type_text = ""
+                            if dmg_type == "Inherit":
+                                dmg_type_text = f"{database.get_stat_emoji('Physical Damage')}/{database.get_stat_emoji('Magical Damage')}"
+                            else:
+                                dmg_type_text = f"{database.get_stat_emoji(dmg_type)}"
+                            power_desc = power_desc.replace(f"${desc_split}$", f"{dmg_type_text} ")
+                            continue
+                        except:
+                            pass
                     try:
                         test_mult = dmg_stats[0]
                     except:
@@ -334,7 +387,6 @@ class Powers(commands.GroupCog, name="power"):
                         pass
                     else:
                         power_desc = power_desc.replace(f"${desc_split}$", f"{database.get_stat_emoji('Max Health')}")
-                        continue
                             
                 power_desc = power_desc.replace(f"${desc_split}$", f"{desc_split}")
         

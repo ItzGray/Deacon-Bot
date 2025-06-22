@@ -171,6 +171,7 @@ _DOT_ICONS = {
     "Bleed": BLEED,
     "Poison": POISON,
     "Heal": HEALTH,
+    "Curse": CURSE,
 }
 
 PVP_TAG = {
@@ -350,6 +351,26 @@ def get_weapon_type_emoji(type: str) -> str:
         weapon_type_string += f"{_WEAPON_TYPES[_WEAPON_TYPES_STR.index(weapon_type)]}/"
     weapon_type_string = weapon_type_string[:-1]
     return weapon_type_string
+
+async def get_ability_damage(db, ability: str):
+    dmg_type = ""
+    async with db.execute(
+        "SELECT * FROM power_info WHERE power_info.power == ?", (ability,)
+    ) as cursor:
+        async for row in cursor:
+            dmg_type = row[3]
+    
+    final_text = ""
+    
+    async with db.execute(
+        "SELECT * FROM power_adjustments WHERE power_adjustments.power == ?", (ability,)
+    ) as cursor:
+        async for row in cursor:
+            if row[4] == "Set" or row[4] == "Multiply Add":
+                final_text += f"+ x{row[6]}{get_stat_emoji(row[5])} "
+    final_text = final_text[2:-1]
+    final_text = f"({final_text})"
+    return final_text, dmg_type
 
 def _make_placeholders(count: int) -> str:
     return ", ".join(["?"] * count)
