@@ -84,7 +84,7 @@ class Secret(commands.GroupCog, name="secret"):
         embed = discord.Embed(
             color=color,
             description=f"The current secret trainer is **{trainer}**\nThe next secret trainer is going to be **{next_trainer}** <t:{next_timestamp}:R>",
-        ).set_author(name=f"Finding current secret trainer", icon_url=emojis.UNIVERSAL.url)
+        ).set_author(name=f"Current secret trainer", icon_url=emojis.UNIVERSAL.url)
         try:
             image_name = portrait
             png_file = f"{image_name}.png"
@@ -130,12 +130,12 @@ class Secret(commands.GroupCog, name="secret"):
             emoji = emojis.SLASHY.url
             portrait = "Portrait_AQ_Skeleton_Hoplite_02"
         
-        trainer_split = trainer.split("(")[0]
+        trainer_split = trainer.split("(")[0][:-1]
         
         embed = discord.Embed(
             color=color,
             description=message,
-        ).set_author(name=f"Getting schedule for {trainer_split}", icon_url=emoji)
+        ).set_author(name=f"{trainer_split}'s schedule", icon_url=emoji)
 
         try:
             image_name = portrait
