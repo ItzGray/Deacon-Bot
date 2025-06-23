@@ -8,7 +8,6 @@ import math
 import discord
 
 from .emojis import *
-from .__main__ import ROOT_DIR, ITEMS_DB
 
 
 
