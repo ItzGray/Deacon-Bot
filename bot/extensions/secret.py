@@ -83,7 +83,7 @@ class Secret(commands.GroupCog, name="secret"):
         next_timestamp = int(datetime(time.year, time.month, time.day, next_hour, 0, 0).timestamp())
         embed = discord.Embed(
             color=color,
-            description=f"The current secret trainer is **{trainer}**\nThe next secret trainer is going to be **{next_trainer}** <t:{next_timestamp}:R>",
+            description=f"The current secret trainer is **{trainer}**\nThe next secret trainer is going to be **{next_trainer}** at <t:{next_timestamp}:t>",
         ).set_author(name=f"Current secret trainer", icon_url=emojis.UNIVERSAL.url)
         try:
             image_name = portrait
