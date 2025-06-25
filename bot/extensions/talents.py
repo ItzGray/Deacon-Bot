@@ -108,15 +108,27 @@ class Talents(commands.GroupCog, name="talent"):
         talent_rank_nums = []
         talent_rank_descs = []
         talent_rank_reqs = []
+        talent_rank_icons = []
+        talent_rank_tooltips = []
         talent_rank_strings = []
         talent_stat_ranks = []
         talent_stat_operators = []
         talent_stat_stats = []
         talent_stat_values = []
         for rank in talent_ranks:
+            icons = []
+            tooltips = []
             talent_rank_nums.append(rank[2])
             talent_rank_descs.append(await database.translate_name(self.bot.db, rank[3]))
             talent_rank_reqs.append(rank[4])
+            icons.append(rank[5].decode("utf-8"))
+            icons.append(rank[6].decode("utf-8"))
+            icons.append(rank[7].decode("utf-8"))
+            talent_rank_icons.append(tuple(icons))
+            tooltips.append(rank[8])
+            tooltips.append(rank[9])
+            tooltips.append(rank[10])
+            talent_rank_tooltips.append(tuple(tooltips))
         for stat in talent_stats:
             talent_stat_ranks.append(stat[2])
             talent_stat_operators.append(stat[3])
@@ -132,7 +144,7 @@ class Talents(commands.GroupCog, name="talent"):
                 else:
                     desc_split = talent_rank_desc.split("&")[1]
                     desc_split_hash = database._fnv_1a(desc_split)
-                    lang_lookup = await database.lang_lookup_by_id(self.bot.db, desc_split_hash)
+                    lang_lookup = await database.translate_name(self.bot.db, desc_split_hash)
                     if "<img src" in lang_lookup:
                         img_split = lang_lookup.split("'")[1]
                         slash_split = img_split.split("/")[-1]
@@ -175,8 +187,32 @@ class Talents(commands.GroupCog, name="talent"):
             talent_rank_desc = talent_rank_desc.replace("#2:%.0", "")
             talent_rank_desc = talent_rank_desc.replace("%.0", "")
             talent_rank_strings.append(talent_rank_desc)
+            icon_emojis = []
+            tooltip_texts = []
+            for icon in talent_rank_icons[rank]:
+                if icon != "":
+                    try:
+                        icon_emojis.append(database._IMG_ICONS[icon.split(".")[0]])
+                    except:
+                        icon_emojis.append("")
+                else:
+                    icon_emojis.append("")
+            for tooltip in talent_rank_tooltips[rank]:
+                if tooltip != "":
+                    try:
+                        tooltip_text = await database.translate_name(self.bot.db, tooltip)
+                        tooltip_texts.append(tooltip_text.replace("%%", "%"))
+                    except:
+                        tooltip_texts.append("")
+                else:
+                    tooltip_texts.append("")
+            for pairing in range(len(icon_emojis)):
+                if icon_emojis[pairing] == "" and tooltip_texts[pairing] == "":
+                    pass
+                else:
+                    talent_rank_strings[rank] += f"\n{icon_emojis[pairing]} **{tooltip_texts[pairing]}**"
             if talent_rank_reqs[rank] != None:
-                talent_rank_strings[rank] += "\nLevel Requirement for Units: " + str(talent_rank_reqs[rank])
+                talent_rank_strings[rank] += "\n**Unit Lvl. Req: " + str(talent_rank_reqs[rank]) + "**"
         
         embed = (
             discord.Embed(

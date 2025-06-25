@@ -9,8 +9,6 @@ import discord
 
 from .emojis import *
 
-
-
 _SCHOOL_COLORS = [
     discord.Color.greyple(), # Universal
     discord.Color.red(), # Buccaneer
@@ -160,6 +158,7 @@ _STAT_ICONS = {
     "MAX_HP_ICON": HEALTH,
     "ICON_MOVEMENT_RANGE": MOVEMENT_RANGE,
     "WILL_ICON": WILL,
+    "RESIST_BASE_ICON": MAGIC_RESIST,
 }
 
 _IMG_ICONS = {
@@ -167,12 +166,18 @@ _IMG_ICONS = {
     "Icon_Buff_Bad": DEBUFF,
     "Icon_Buff_Good": BUFF,
     "Icon_Area_Enemy_Territory_Med": ENEMY_TERRITORY,
+    "Icon_Area_Radial_Orange_Med": ALL_3X3,
+    "Icon_Area_Radial_Green_Med": ALLY_3X3,
     "Icon_Attribute_Slash_Med": SLASHY,
     "Icon_Attribute_Axe_Med": SMASHY,
     "Icon_Attribute_Kris_Med": STABBY,
     "Icon_Attribute_Pistol_Med": SHOOTY,
     "Icon_Attribute_Staff_Med": STAFFY,
+    "Icon_Attribute_Crit_Rating_Med": CRIT,
+    "Icon_Attribute_Damage": WEAPON_POWER,
     "Icon_Talent_Star_Yellow_01": TALENT_STAR,
+    "Icon_Chance_Med": CHANCE,
+    "Icon_TimesPerTurn_Med": TIMES,
 }
 
 _DOT_ICONS = {
@@ -240,33 +245,8 @@ def _fnv_1a(data: bytes) -> int:
 def translate_school(school: int) -> discord.PartialEmoji:
     return _SCHOOLS[school]
 
-
-def translate_equip_school(school: int) -> str:
-    school_emoji = _SCHOOLS[school & 0x7FFF_FFFF]
-    if school & (1 << 31) != 0:
-        return f"All schools except {school_emoji}"
-    elif school == 0:
-        return f"{school_emoji}"
-    else:
-        return f"{school_emoji} only"
-
-
 def make_school_color(school: str) -> discord.Color:
     return _SCHOOL_COLORS[_SCHOOLS_STR.index(school)]
-
-
-_TYPE_EMOJIS = {
-    "Accuracy_image": ACCURACY,
-    "CriticalRating_image": CRIT,
-    "Charm_image": CHARM,
-    "Dodge_image": DODGE,
-}
-
-def translate_type_emoji(icon_name: str) -> PartialEmoji:
-    try:
-        return _TYPE_EMOJIS[icon_name]
-    except KeyError:
-        return _TYPE_EMOJIS["Random_image"]
     
 async def translate_name(db, id: int) -> str:
     name = ""
@@ -314,15 +294,6 @@ async def translate_unit_name(db, id: int) -> str:
             if name == None:
                 name = object_name
     return name, object_name
-
-async def lang_lookup_by_id(db, hash: int) -> str:
-    name = ""
-    async with db.execute(
-        "SELECT * FROM locale_en WHERE id == ?", (hash,)
-    ) as cursor:
-        async for row in cursor:
-            name = row[1]
-    return name
 
 async def fetch_curve(db, curve):
     stats = []

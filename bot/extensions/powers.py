@@ -113,7 +113,7 @@ class Powers(commands.GroupCog, name="power"):
             else:
                 desc_split = power_desc.split("&")[1]
                 desc_split_hash = database._fnv_1a(desc_split)
-                lang_lookup = await database.lang_lookup_by_id(self.bot.db, desc_split_hash)
+                lang_lookup = await database.translate_name(self.bot.db, desc_split_hash)
                 if "<img src" in lang_lookup:
                     img_split = lang_lookup.split("'")[1]
                     slash_split = img_split.split("/")[-1]

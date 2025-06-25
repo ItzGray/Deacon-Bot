@@ -45,6 +45,8 @@ BUFF = PartialEmoji.from_str("<:ot_BG:1382828662520549729>")
 DEBUFF = PartialEmoji.from_str("<:ot_BB:1382828661086097448>")
 ENEMY_TERRITORY = PartialEmoji.from_str("<:ot_ET:1382881902674837574>")
 TALENT_STAR = PartialEmoji.from_str("<:ot_STAR:1382963963788132402>")
+CHANCE = PartialEmoji.from_str("<:ot_CHANC:1387507842935951543>")
+TIMES = PartialEmoji.from_str("<:ot_X:1387507845108600842>")
 
 SHOOTY = PartialEmoji.from_str("<:ot_SHOOT:1382828663958933634>")
 SLASHY = PartialEmoji.from_str("<:ot_SLASH:1382828665141854298>")
@@ -57,6 +59,9 @@ POISON = PartialEmoji.from_str("<:ot_POIS:1384347997030187211>")
 CURSE = PartialEmoji.from_str("<:ot_CURS:1385128202078523412>")
 
 PRIMARY_STATS = f"{STRENGTH}/{AGILITY}/{WILL}"
+
+ALLY_3X3 = PartialEmoji.from_str("<:ar_3X3ALLY:1387512237228429312>")
+ALL_3X3 = PartialEmoji.from_str("<:ar_3X3ALL:1387512235953356860>")
 
 RARITY_1 = "" # Not done yet
 RARITY_2 = "" # Not done yet
