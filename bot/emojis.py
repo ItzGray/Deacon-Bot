@@ -57,3 +57,9 @@ POISON = PartialEmoji.from_str("<:ot_POIS:1384347997030187211>")
 CURSE = PartialEmoji.from_str("<:ot_CURS:1385128202078523412>")
 
 PRIMARY_STATS = f"{STRENGTH}/{AGILITY}/{WILL}"
+
+RARITY_1 = "" # Not done yet
+RARITY_2 = "" # Not done yet
+RARITY_3 = "" # Not done yet
+RARITY_4 = "" # Not done yet
+RARITY_5 = "" # Not done yet

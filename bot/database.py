@@ -136,6 +136,14 @@ _OTHER = [
     TALENT_STAR,
 ]
 
+_RARITIES = [
+    RARITY_1,
+    RARITY_2,
+    RARITY_3,
+    RARITY_4,
+    RARITY_5,
+]
+
 _STAT_ICONS = {
     "DAMAGE_BASE_ICON": WEAPON_POWER,
     "ARMOR_ICON": ARMOR,
@@ -363,6 +371,12 @@ def get_weapon_type_emoji(type: str) -> str:
         weapon_type_string += f"{_WEAPON_TYPES[_WEAPON_TYPES_STR.index(weapon_type)]}/"
     weapon_type_string = weapon_type_string[:-1]
     return weapon_type_string
+
+def get_rarity_emoji(rarity: int) -> str:
+    try:
+        return _RARITIES[rarity - 1]
+    except:
+        return ""
 
 async def get_ability_damage(db, ability: str):
     dmg_type = ""
