@@ -32,7 +32,7 @@ def move_images_to_bot():
     shared_worlddata = Archive.mmap("_Shared-WorldData.wad")
     de = BinDeserializer("types.json")
     tex_files_done = []
-    for file in mob_worlddata.iter_glob("Character/**/Portraits/*.tex"):
+    for file in mob_worlddata.iter_glob("Character/**/*.tex"):
         filename = file.split("/")[-1].split(".")[0]
         print(f"Extracting {filename} from Mob-WorldData.wad")
         tex = de.deserialize_from_path(file, mob_worlddata)
@@ -47,22 +47,7 @@ def move_images_to_bot():
         output_file_path = output_path / (filename + "." + file_ext)
         with open(output_file_path, "wb") as output_file:
             output_file.write(data)
-    for file in mob_worlddata.iter_glob("Character/**/Portrait/*.tex"):
-        filename = file.split("/")[-1].split(".")[0]
-        print(f"Extracting {filename} from Mob-WorldData.wad")
-        tex = de.deserialize_from_path(file, mob_worlddata)
-        try:
-            portrait_file = tex["m_baseTexture"].decode("utf-8").split("|")[-1]
-            data = mob_worlddata[portrait_file]
-        except:
-            continue
-        tex_files_done.append(portrait_file)
-        portrait_filename = portrait_file.split("/")[-1]
-        file_ext = portrait_file.split(".")[-1]
-        output_file_path = output_path / (filename + "." + file_ext)
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in mob_worlddata.iter_glob("Character/**/Portraits/*.jpf"):
+    for file in mob_worlddata.iter_glob("Character/**/*.jpf"):
         if file in tex_files_done:
             continue
         data = mob_worlddata[file]
@@ -71,34 +56,7 @@ def move_images_to_bot():
         print(f"Extracting {filename} from Mob-WorldData.wad")
         with open(output_file_path, "wb") as output_file:
             output_file.write(data)
-    for file in mob_worlddata.iter_glob("Character/**/portraits/*.jpf"):
-        if file in tex_files_done:
-            continue
-        data = mob_worlddata[file]
-        filename = file.split("/")[-1]
-        output_file_path = output_path / filename
-        print(f"Extracting {filename} from Mob-WorldData.wad")
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in mob_worlddata.iter_glob("Character/**/Portrait/*.jpf"):
-        if file in tex_files_done:
-            continue
-        data = mob_worlddata[file]
-        filename = file.split("/")[-1]
-        output_file_path = output_path / filename
-        print(f"Extracting {filename} from Mob-WorldData.wad")
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in mob_worlddata.iter_glob("Character/**/Portraits/*.dds"):
-        if file in tex_files_done:
-            continue
-        data = mob_worlddata[file]
-        filename = file.split("/")[-1]
-        output_file_path = output_path / filename
-        print(f"Extracting {filename} from Mob-WorldData.wad")
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in mob_worlddata.iter_glob("Character/**/Portrait/*.dds"):
+    for file in mob_worlddata.iter_glob("Character/**/*.dds"):
         if file in tex_files_done:
             continue
         data = mob_worlddata[file]
