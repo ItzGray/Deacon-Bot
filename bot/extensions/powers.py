@@ -343,6 +343,11 @@ class Powers(commands.GroupCog, name="power"):
                             icon_num = 0
                         except:
                             pass
+                        try:
+                            percent_length = len(percents)
+                            icon_num = 0
+                        except:
+                            pass
                     try:
                         percent_length = len(percents)
                     except:
@@ -356,7 +361,7 @@ class Powers(commands.GroupCog, name="power"):
                             stat_emojis = []
                             for stat in stats:
                                 stat_emojis.append(database.get_stat_emoji(stat))
-                            power_desc = power_desc.replace(f"${desc_split}$", f"{stat_emojis[icon_num - 1]}")
+                            power_desc = power_desc.replace(f"${desc_split}$", f"{stat_emojis[icon_num]}")
                             continue
                     try:
                         bonus_length = len(bonuses)
@@ -451,6 +456,7 @@ class Powers(commands.GroupCog, name="power"):
             power_desc = power_desc.replace("#1:%+.0", "+")
         else:
             power_desc = power_desc.replace("#1:%+.0", "-")
+        power_desc = power_desc.replace("#2:%+.0", "+")
         power_desc = power_desc.replace("#1:%.0", "")
         power_desc = power_desc.replace("#2:%.0", "")
         power_desc = power_desc.replace("#3:%.0", "-")
