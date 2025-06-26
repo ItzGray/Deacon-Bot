@@ -170,7 +170,6 @@ class Powers(commands.GroupCog, name="power"):
                             if power_dmg_types[percent] == "Debuff":
                                 debuffs.append(percent_num)
                             percents.append(power_percent)
-                    logger.info(percent_num)
                     power_desc = power_desc.replace(f"${desc_split}$", str(percents[percent_num - 1]))
                     continue
                 if "eValue" in desc_split:
