@@ -176,6 +176,7 @@ _IMG_ICONS = {
     "Icon_Attribute_Staff_Med": STAFFY,
     "Icon_Attribute_Crit_Rating_Med": CRIT,
     "Icon_Attribute_Damage": WEAPON_POWER,
+    "Icon_Attribute_Mojo": SPELL_POWER,
     "Icon_Talent_Star_Yellow_01": TALENT_STAR,
     "Icon_Chance_Med": CHANCE,
     "Icon_TimesPerTurn_Med": TIMES,

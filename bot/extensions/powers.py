@@ -155,7 +155,7 @@ class Powers(commands.GroupCog, name="power"):
                         power_desc = power_desc.replace(f"${desc_split}$", str(durations[duration_num - 1]))
                         continue
                     except:
-                        pass
+                        power_desc = power_desc.replace(f"${desc_split}$", f"1")
                 if "ePercent" in desc_split:
                     try:
                         percent_num = int(desc_split[-1])
@@ -282,8 +282,7 @@ class Powers(commands.GroupCog, name="power"):
                             amounts.append(power_mult_amounts[value])
                     final_text = ""
                     for value in range(len(amounts)):
-                        if operators[value] == "Set" or operators[value] == "Multiply Add":
-                            final_text += f"+ x{amounts[value]}{database.get_stat_emoji(heal_stats[value])} "
+                        final_text += f"+ x{amounts[value]}{database.get_stat_emoji(heal_stats[value])} "
                     final_text = final_text[2:-1]
                     final_text = f"({final_text})"
                     if final_text == "()":
@@ -328,6 +327,8 @@ class Powers(commands.GroupCog, name="power"):
                     power_desc = power_desc.replace(f"${desc_split}$", final_text)
                 if "eTargetStatIcon" in desc_split:
                     power_desc = power_desc.replace(f"${desc_split}$", f"{database.get_stat_emoji(power_stats[value_num])}")
+                if "eReqIcon" in desc_split:
+                    power_desc = power_desc.replace(f"${desc_split}$", "Exploding Starfish")
                 if "eIcon" in desc_split:
                     try:
                         icon_num = int(desc_split[-1])
@@ -348,6 +349,8 @@ class Powers(commands.GroupCog, name="power"):
                             icon_num = 0
                         except:
                             pass
+                    if power_desc[power_desc.index(f"${desc_split}$") - 7:power_desc.index(f"${desc_split}$")] == "Ignores":
+                        power_desc = power_desc.replace(f"${desc_split}$", f"{emojis.ARMOR}")
                     try:
                         percent_length = len(percents)
                     except:
@@ -449,6 +452,35 @@ class Powers(commands.GroupCog, name="power"):
                         pass
                     else:
                         power_desc = power_desc.replace(f"${desc_split}$", f"{database.get_stat_emoji('Max Health')}")
+                    try:
+                        percent_length = len(percents)
+                    except:
+                        if len(power_percents) > 0:
+                            percents = []
+                            for percent in range(len(power_percents)):
+                                if power_percents[percent] != -1:
+                                    power_percent = power_percents[percent]
+                                    percents.append(power_percent)
+                            logger.info(percents)
+                            continue
+                        else:
+                            pass
+                    try:
+                        test_mult = dmg_stats[0]
+                    except:
+                        good = False
+                        for type in power_dmg_types:
+                            if type != "":
+                                good = True
+                        if good and len(power_dmg_types) > 0:
+                            dmg_type = power_dmg_types[icon_num - 1]
+                            dmg_type_text = ""
+                            if dmg_type == "Inherit":
+                                dmg_type_text = f"{database.get_stat_emoji('Physical Damage')}/{database.get_stat_emoji('Magical Damage')}"
+                            else:
+                                dmg_type_text = f"{database.get_stat_emoji(dmg_type)}"
+                            power_desc = power_desc.replace(f"${desc_split}$", f"{dmg_type_text} ")
+                            continue
 
                 power_desc = power_desc.replace(f"${desc_split}$", f"{desc_split}")
         
@@ -467,7 +499,7 @@ class Powers(commands.GroupCog, name="power"):
                 power_desc = power_desc.replace("#2:%+.0", "", 1)
         power_desc = power_desc.replace("#1:%.0", "")
         power_desc = power_desc.replace("#2:%.0", "")
-        power_desc = power_desc.replace("#3:%.0", "-")
+        power_desc = power_desc.replace("#3:%.0", "")
         power_desc = power_desc.replace("%.0", "")
         power_desc = power_desc.replace("</font>", "")
         if "<font color=" in power_desc:
