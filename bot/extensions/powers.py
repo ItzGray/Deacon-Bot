@@ -159,6 +159,8 @@ class Powers(commands.GroupCog, name="power"):
                 if "ePercent" in desc_split:
                     try:
                         percent_num = int(desc_split[-1])
+                        if desc_split[-3:] == "1.1":
+                            percent_num = 2
                     except:
                         percent_num = 1
                     percents = []
@@ -168,6 +170,7 @@ class Powers(commands.GroupCog, name="power"):
                             if power_dmg_types[percent] == "Debuff":
                                 debuffs.append(percent_num)
                             percents.append(power_percent)
+                    logger.info(percent_num)
                     power_desc = power_desc.replace(f"${desc_split}$", str(percents[percent_num - 1]))
                     continue
                 if "eValue" in desc_split:
@@ -332,6 +335,10 @@ class Powers(commands.GroupCog, name="power"):
                 if "eIcon" in desc_split:
                     try:
                         icon_num = int(desc_split[-1])
+                        if power_id == 1251094:
+                            if desc_split[-3:] == "1.1":
+                                icon_num = 2
+                            icon_num -= 1
                     except:
                         icon_num = 1
                         try:
@@ -461,7 +468,6 @@ class Powers(commands.GroupCog, name="power"):
                                 if power_percents[percent] != -1:
                                     power_percent = power_percents[percent]
                                     percents.append(power_percent)
-                            logger.info(percents)
                             continue
                         else:
                             pass
@@ -497,6 +503,11 @@ class Powers(commands.GroupCog, name="power"):
                 power_desc = power_desc.replace("#2:%+.0", "+", 1)
             else:
                 power_desc = power_desc.replace("#2:%+.0", "", 1)
+        while "#3:%+.0" in power_desc:
+            if power_desc.split("#3:%+.0")[1][0] != "-":
+                power_desc = power_desc.replace("#3:%+.0", "+", 1)
+            else:
+                power_desc = power_desc.replace("#3:%+.0", "", 1)
         power_desc = power_desc.replace("#1:%.0", "")
         power_desc = power_desc.replace("#2:%.0", "")
         power_desc = power_desc.replace("#3:%.0", "")
