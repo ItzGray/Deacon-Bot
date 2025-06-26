@@ -127,7 +127,7 @@ class Powers(commands.GroupCog, name="power"):
 
                 power_desc = power_desc.replace(f"&{desc_split}&", lang_lookup)
 
-        debuff = False
+        debuffs = []
         while "$" in power_desc:
             try:
                 desc_split = power_desc.split("$")[2]
@@ -166,7 +166,7 @@ class Powers(commands.GroupCog, name="power"):
                         if power_percents[percent] != -1:
                             power_percent = power_percents[percent]
                             if power_dmg_types[percent] == "Debuff":
-                                debuff = True
+                                debuffs.append(percent_num)
                             percents.append(power_percent)
                     power_desc = power_desc.replace(f"${desc_split}$", str(percents[percent_num - 1]))
                     continue
@@ -299,7 +299,7 @@ class Powers(commands.GroupCog, name="power"):
                         if power_percents[bonus] != -1:
                             power_bonus = power_percents[bonus]
                             if power_dmg_types[bonus] == "Debuff":
-                                debuff = True
+                                debuffs.append(bonus_num)
                             power_bonus = int(power_bonus / 100)
                             bonuses.append(power_bonus)
                     power_desc = power_desc.replace(f"${desc_split}$", str(bonuses[bonus_num - 1]))
@@ -361,7 +361,10 @@ class Powers(commands.GroupCog, name="power"):
                             stat_emojis = []
                             for stat in stats:
                                 stat_emojis.append(database.get_stat_emoji(stat))
-                            power_desc = power_desc.replace(f"${desc_split}$", f"{stat_emojis[icon_num]}")
+                            try:
+                                power_desc = power_desc.replace(f"${desc_split}$", f"{stat_emojis[icon_num]}")
+                            except:
+                                power_desc = power_desc.replace(f"${desc_split}$", f"{stat_emojis[icon_num - 1]}")
                             continue
                     try:
                         bonus_length = len(bonuses)
@@ -446,21 +449,29 @@ class Powers(commands.GroupCog, name="power"):
                         pass
                     else:
                         power_desc = power_desc.replace(f"${desc_split}$", f"{database.get_stat_emoji('Max Health')}")
-                            
+
                 power_desc = power_desc.replace(f"${desc_split}$", f"{desc_split}")
         
         power_desc = power_desc.replace("<br>", "\n")
         power_desc = power_desc.replace("\\n", "\n")
         power_desc = power_desc.replace("%%", "%")
-        if debuff == False:
-            power_desc = power_desc.replace("#1:%+.0", "+")
-        else:
-            power_desc = power_desc.replace("#1:%+.0", "-")
-        power_desc = power_desc.replace("#2:%+.0", "+")
+        while "#1:%+.0" in power_desc:
+            if power_desc.split("#1:%+.0")[1][0] != "-":
+                power_desc = power_desc.replace("#1:%+.0", "+", 1)
+            else:
+                power_desc = power_desc.replace("#1:%+.0", "", 1)
+        while "#2:%+.0" in power_desc:
+            if power_desc.split("#2:%+.0")[1][0] != "-":
+                power_desc = power_desc.replace("#2:%+.0", "+", 1)
+            else:
+                power_desc = power_desc.replace("#2:%+.0", "", 1)
         power_desc = power_desc.replace("#1:%.0", "")
         power_desc = power_desc.replace("#2:%.0", "")
         power_desc = power_desc.replace("#3:%.0", "-")
         power_desc = power_desc.replace("%.0", "")
+        power_desc = power_desc.replace("</font>", "")
+        if "<font color=" in power_desc:
+            power_desc = re.sub(r'<font color="(.*?)">', '', power_desc)
 
         pvp_tag = row[5]
 
