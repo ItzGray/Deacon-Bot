@@ -152,10 +152,10 @@ class Pets(commands.GroupCog, name="pet"):
         pet_stat_string += f"{strength} Strength {database.get_stat_emoji('Strength')}\n"
         pet_stat_string += f"{agility} Agility {database.get_stat_emoji('Agility')}\n"
         pet_stat_string += f"{will} Will {database.get_stat_emoji('Will')}\n"
-        pet_stat_string += f"{stat_power} Power {database.get_stat_emoji('Power')}\n"
-        pet_stat_string += f"{guts} Guts {database.get_stat_emoji('Guts')}\n"
-        pet_stat_string += f"{guile} Guile {database.get_stat_emoji('Guile')}\n"
-        pet_stat_string += f"{grit} Grit {database.get_stat_emoji('Grit')}\n"
+        pet_stat_string += f"{stat_power} Power {database.get_stat_emoji('Pet Power')}\n"
+        pet_stat_string += f"{guts} Guts {database.get_stat_emoji('Pet Guts')}\n"
+        pet_stat_string += f"{guile} Guile {database.get_stat_emoji('Pet Guile')}\n"
+        pet_stat_string += f"{grit} Grit {database.get_stat_emoji('Pet Grit')}\n"
         pet_stat_string += f"{health} Max Health {database.get_stat_emoji('Max Health')}\n"
 
         embed = (
