@@ -36,6 +36,7 @@ _ITEMS = [
     TOTEM,
     CHARM,
     RING,
+    MOUNT,
 ]
 
 _ITEMS_STR = [
@@ -47,6 +48,7 @@ _ITEMS_STR = [
     "Totem",
     "Charm",
     "Ring",
+    "Mount",
 ]
 
 _SCHOOLS_STR = [
@@ -81,6 +83,7 @@ _STATS = [
     PHYSICAL_DAMAGE,
     MAGICAL_DAMAGE,
     PRIMARY_STATS,
+    SPEED,
 ]
 
 _STATS_STR = [
@@ -106,6 +109,7 @@ _STATS_STR = [
     "Physical Damage",
     "Magical Damage",
     "Primary Stat",
+    "Speed",
 ]
 
 _WEAPON_TYPES = [

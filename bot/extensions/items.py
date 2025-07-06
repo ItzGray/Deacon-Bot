@@ -131,6 +131,8 @@ class Items(commands.GroupCog, name="item"):
                 stat_rounded = round(stat[4], 2)
                 stat_rounded_int = int(stat_rounded * 100)
                 stat_string += "+" + str(stat_rounded_int) + "%"
+                if stat_string[1] == "-":
+                    stat_string = stat_string[1:]
             else:
                 stat_string += "+" + str(stat[4])
             stat_string += f" {str(stat[3])} {database.get_stat_emoji(str(stat[3]))}\n"
@@ -192,7 +194,7 @@ class Items(commands.GroupCog, name="item"):
         interaction: discord.Interaction,
         name: str,
         school: Optional[Literal["Any", "Buccaneer", "Privateer", "Witchdoctor", "Musketeer", "Swashbuckler"]] = "Any",
-        kind: Optional[Literal["Hat", "Outfit", "Boots", "Weapon", "Accessory", "Totem", "Charm", "Ring"]] = "Any",
+        kind: Optional[Literal["Hat", "Outfit", "Boots", "Weapon", "Accessory", "Totem", "Charm", "Ring", "Mount"]] = "Any",
         level: Optional[int] = -1,
         use_object_name: Optional[bool] = False,
     ):
@@ -250,7 +252,7 @@ class Items(commands.GroupCog, name="item"):
         interaction: discord.Interaction,
         name: str,
         school: Optional[Literal["Any", "Buccaneer", "Privateer", "Witchdoctor", "Musketeer", "Swashbuckler"]] = "Any",
-        kind: Optional[Literal["Hat", "Outfit", "Boots", "Weapon", "Accessory", "Totem", "Charm", "Ring"]] = "Any",
+        kind: Optional[Literal["Hat", "Outfit", "Boots", "Weapon", "Accessory", "Totem", "Charm", "Ring", "Mount"]] = "Any",
         level: Optional[int] = -1,
     ):
         await interaction.response.defer()

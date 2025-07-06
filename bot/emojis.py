@@ -22,6 +22,7 @@ WILL = PartialEmoji.from_str("<:st_W:1382187894902362173>")
 ARMOR_PENETRATION = PartialEmoji.from_str("<:st_ARMP:1382188150159442060>")
 ATTACK_RANGE = PartialEmoji.from_str("<:st_ATTR:1382187873981431869>")
 MOVEMENT_RANGE = PartialEmoji.from_str("<:st_MOVR:1382187888082550867>")
+SPEED = "" # No icon for speed in Pirate
 
 GRIT = PartialEmoji.from_str("<:st_GRIT:1382188152126701648>")
 GUILE = PartialEmoji.from_str("<:st_GUIL:1382187881627521025>")
@@ -36,6 +37,7 @@ ACCESSORY = "" # Not done yet
 TOTEM = "" # Not done yet
 CHARM = "" # Not done yet
 RING = "" # Not done yet
+MOUNT = "" # Not done yet
 
 PHYSICAL_DAMAGE = PartialEmoji.from_str("<:dam_PHYS:1382187865986826360>")
 MAGICAL_DAMAGE = PartialEmoji.from_str("<:dam_MAGI:1382187863940010127>")

@@ -67,6 +67,39 @@ def move_images_to_bot():
         print(f"Extracting {filename} from Mob-WorldData.wad")
         with open(output_file_path, "wb") as output_file:
             output_file.write(data)
+    for file in mob_worlddata.iter_glob("MountPortraits/*.tex"):
+        filename = file.split("/")[-1].split(".")[0]
+        print(f"Extracting {filename} from Mob-WorldData.wad")
+        tex = de.deserialize_from_path(file, mob_worlddata)
+        try:
+            portrait_file = tex["m_baseTexture"].decode("utf-8").split("|")[-1]
+            data = mob_worlddata[portrait_file]
+        except:
+            continue
+        tex_files_done.append(portrait_file)
+        portrait_filename = portrait_file.split("/")[-1]
+        file_ext = portrait_file.split(".")[-1]
+        output_file_path = output_path / (filename + "." + file_ext)
+        with open(output_file_path, "wb") as output_file:
+            output_file.write(data)
+    for file in mob_worlddata.iter_glob("MountPortraits/*.jpf"):
+        if file in tex_files_done:
+            continue
+        data = mob_worlddata[file]
+        filename = file.split("/")[-1]
+        output_file_path = output_path / filename
+        print(f"Extracting {filename} from Mob-WorldData.wad")
+        with open(output_file_path, "wb") as output_file:
+            output_file.write(data)
+    for file in mob_worlddata.iter_glob("MountPortraits/*.dds"):
+        if file in tex_files_done:
+            continue
+        data = mob_worlddata[file]
+        filename = file.split("/")[-1]
+        output_file_path = output_path / filename
+        print(f"Extracting {filename} from Mob-WorldData.wad")
+        with open(output_file_path, "wb") as output_file:
+            output_file.write(data)
     for file in mob_worlddata.iter_glob("StateObjects/FX/**/*.dds"):
         if file in tex_files_done:
             continue
@@ -101,6 +134,15 @@ def move_images_to_bot():
         with open(output_file_path, "wb") as output_file:
             output_file.write(data)
     for file in player_worlddata.iter_glob("Character/Player/Icons/**/*.jpf"):
+        if file in tex_files_done:
+            continue
+        data = player_worlddata[file]
+        filename = file.split("/")[-1]
+        output_file_path = output_path / filename
+        print(f"Extracting {filename} from Player-WorldData.wad")
+        with open(output_file_path, "wb") as output_file:
+            output_file.write(data)
+    for file in player_worlddata.iter_glob("Character/Mounts/**/*.jpf"):
         if file in tex_files_done:
             continue
         data = player_worlddata[file]
