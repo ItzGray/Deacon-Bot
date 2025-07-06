@@ -1,3 +1,4 @@
+import time
 from PIL import Image
 from pathlib import Path
 
@@ -16,6 +17,7 @@ def convert_dds_to_png(dds_file, png_file):
     image.save(output_path, "PNG")
 
 if __name__ == "__main__":
+    start = time.time()
     folder_path = Path("SummonedImages")
     file_list = list(folder_path.glob("*"))
 
@@ -32,6 +34,7 @@ if __name__ == "__main__":
         except:
             print("Exception occurred! PNG file not written.")
             continue
-
+    
+    print(f"Done in {round(time.time() - start, 2)} seconds.")
     print("The DDS files have been converted to PNG files.")
     print("The PNG files are located in the PNG_Images directory.")

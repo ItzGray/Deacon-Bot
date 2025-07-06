@@ -1,3 +1,4 @@
+import time
 from pathlib import Path
 from katsuba.wad import Archive # type: ignore
 from katsuba.op import * # type: ignore
@@ -25,6 +26,7 @@ class BinDeserializer:
         return to_return
 
 def move_images_to_bot():
+    start = time.time()
     output_path = Path("SummonedImages")
     mob_worlddata = Archive.mmap("Mob-WorldData.wad")
     player_worlddata = Archive.mmap("Player-WorldData.wad")
@@ -57,6 +59,15 @@ def move_images_to_bot():
         with open(output_file_path, "wb") as output_file:
             output_file.write(data)
     for file in mob_worlddata.iter_glob("Character/**/*.dds"):
+        if file in tex_files_done:
+            continue
+        data = mob_worlddata[file]
+        filename = file.split("/")[-1]
+        output_file_path = output_path / filename
+        print(f"Extracting {filename} from Mob-WorldData.wad")
+        with open(output_file_path, "wb") as output_file:
+            output_file.write(data)
+    for file in mob_worlddata.iter_glob("StateObjects/FX/**/*.dds"):
         if file in tex_files_done:
             continue
         data = mob_worlddata[file]
@@ -161,7 +172,7 @@ def move_images_to_bot():
         print(f"Extracting {filename} from _Shared-WorldData.wad")
         with open(output_file_path, "wb") as output_file:
             output_file.write(data)
-    print("Done!")
+    print(f"Done! Wrote all files in {round(time.time() - start, 2)} seconds.")
 
 if __name__ == "__main__":
     move_images_to_bot()
