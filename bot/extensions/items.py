@@ -62,7 +62,12 @@ class Items(commands.GroupCog, name="item"):
     
     async def fetch_item(self, name: str) -> List[tuple]:
         async with self.bot.db.execute(FIND_ITEM_QUERY, (name,)) as cursor:
-            return await cursor.fetchall()
+            if not await cursor.fetchall():
+                mount_name = f"{name} (PERM)"
+                async with self.bot.db.execute(FIND_ITEM_QUERY, (mount_name,)) as mount_cursor:
+                    return await mount_cursor.fetchall()
+            else:
+                return await cursor.fetchall()
 
     async def fetch_object_name(self, name: str) -> List[tuple]:
         name_bytes = name.encode('utf-8')
