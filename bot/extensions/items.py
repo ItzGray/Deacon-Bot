@@ -62,12 +62,7 @@ class Items(commands.GroupCog, name="item"):
     
     async def fetch_item(self, name: str) -> List[tuple]:
         async with self.bot.db.execute(FIND_ITEM_QUERY, (name,)) as cursor:
-            if not await cursor.fetchall():
-                mount_name = f"{name} (PERM)"
-                async with self.bot.db.execute(FIND_ITEM_QUERY, (mount_name,)) as mount_cursor:
-                    return await mount_cursor.fetchall()
-            else:
-                return await cursor.fetchall()
+            return await cursor.fetchall()
 
     async def fetch_object_name(self, name: str) -> List[tuple]:
         name_bytes = name.encode('utf-8')
@@ -220,6 +215,9 @@ class Items(commands.GroupCog, name="item"):
                 rows = await self.fetch_item_with_filter(name, school, kind, level)
             else:
                 rows = await self.fetch_item(name)
+                if not rows:
+                    mount_name = f"{name} (PERM)"
+                    rows = await self.fetch_item(mount_name)
         
         if rows:
             embeds = [await self.build_item_embed(row) for row in rows]
