@@ -332,9 +332,12 @@ class Powers(commands.GroupCog, name="power"):
                 if "eReqIcon" in desc_split:
                     power_desc = power_desc.replace(f"${desc_split}$", "Exploding Starfish")
                 if "eIcon" in desc_split:
+                    if power_id == 1291777 and desc_split == "eIcon1": # Special case for Novablast, hopefully I'll make this better later
+                        power_desc = power_desc.replace(f"${desc_split}$", f"{emojis.WEAPON_POWER}")
+                        continue
                     try:
                         icon_num = int(desc_split[-1])
-                        if power_id == 1251094:
+                        if power_id == 1251094: # Special case for Sandstorm, hopefully I'll make this better later
                             if desc_split[-3:] == "1.1":
                                 icon_num = 2
                             icon_num -= 1
