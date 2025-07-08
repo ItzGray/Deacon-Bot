@@ -268,7 +268,10 @@ class Powers(commands.GroupCog, name="power"):
                             value_num = 0
                         else:
                             pass
-                    power_desc = power_desc.replace(f"${desc_split}$", f"{database._DOT_ICONS[power_dmg_types[value_num]]}")
+                    try:
+                        power_desc = power_desc.replace(f"${desc_split}$", f"{database._DOT_ICONS[power_dmg_types[value_num]]}")
+                    except:
+                        power_desc = power_desc.replace(f"${desc_split}$", f"")
                 if "eHeal" in desc_split:
                     try:
                         value_num = int(desc_split[-1])
