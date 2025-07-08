@@ -20,6 +20,7 @@ if __name__ == "__main__":
     start = time.time()
     folder_path = Path("SummonedImages")
     file_list = list(folder_path.glob("*"))
+    output_paths = []
 
     for file_path in file_list:
         dds_file = str(file_path)
@@ -30,7 +31,9 @@ if __name__ == "__main__":
         print("DDS File:", dds_file)
         print("PNG File:", png_file)
         try:
-            convert_dds_to_png(dds_file, png_file)
+            if png_file not in output_paths:
+                convert_dds_to_png(dds_file, png_file)
+                output_paths.append(png_file)
         except:
             print("Exception occurred! PNG file not written.")
             continue

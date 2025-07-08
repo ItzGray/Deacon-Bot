@@ -34,6 +34,7 @@ def move_images_to_bot():
     shared_worlddata = Archive.mmap("_Shared-WorldData.wad")
     de = BinDeserializer("types.json")
     tex_files_done = []
+    mount_files_done = []
     for file in mob_worlddata.iter_glob("Character/**/*.tex"):
         filename = file.split("/")[-1].split(".")[0]
         print(f"Extracting {filename} from Mob-WorldData.wad")
@@ -147,6 +148,9 @@ def move_images_to_bot():
             continue
         data = player_worlddata[file]
         filename = file.split("/")[-1]
+        if filename in mount_files_done:
+            continue
+        mount_files_done.append(filename)
         output_file_path = output_path / filename
         print(f"Extracting {filename} from Player-WorldData.wad")
         with open(output_file_path, "wb") as output_file:
