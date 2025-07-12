@@ -374,7 +374,7 @@ class Units(commands.GroupCog, name="unit"):
                         pass
                 elif curve_types[stat + 1] == "Bonus":
                     for stat_level in range(curr_stat_count):
-                        if level > curve_levels[stat + stat_level]:
+                        if level >= curve_levels[stat + stat_level]:
                             raw_num += curve_values[stat + stat_level]
                     bonus_flag = True
             else:
