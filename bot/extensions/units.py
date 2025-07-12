@@ -416,7 +416,10 @@ class Units(commands.GroupCog, name="unit"):
 
         unit_name = await database.translate_name(self.bot.db, row[1])
         unit_title = await database.translate_name(self.bot.db, row[4])
-        unit_image = row[3].decode("utf-8")
+        try:
+            unit_image = row[3].decode("utf-8")
+        except:
+            unit_image = ""
 
         title_string = ""
         if unit_name == unit_title or unit_title == "":

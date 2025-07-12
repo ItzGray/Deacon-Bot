@@ -108,7 +108,10 @@ class Pets(commands.GroupCog, name="pet"):
         health = row[11]
 
         pet_name = await database.translate_name(self.bot.db, row[1])
-        pet_image = row[3].decode("utf-8")
+        try:
+            pet_image = row[3].decode("utf-8")
+        except:
+            pet_image = ""
         pet_flags = row[12]
 
         talents = await self.fetch_pet_talents(pet_id)
