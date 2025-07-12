@@ -30,14 +30,14 @@ GUTS = PartialEmoji.from_str("<:st_GUTS:1382188153380798588>")
 PET_POWER = PartialEmoji.from_str("<:st_PPOW:1382188155830014095>")
 
 HAT = PartialEmoji.from_str("<:eq_H:1382214825546874910>")
-OUTFIT = PartialEmoji.from_str("<:eq_O:1382214827656872016>")
+OUTFIT = PartialEmoji.from_str("<:eq_O:1393491337344450632>")
 BOOTS = PartialEmoji.from_str("<:eq_B:1382196053951905873>")
 WEAPON = PartialEmoji.from_str("<:st_WP:1382188160267583490>")
-ACCESSORY = "" # Not done yet
-TOTEM = "" # Not done yet
-CHARM = "" # Not done yet
-RING = "" # Not done yet
-MOUNT = "" # Not done yet
+ACCESSORY = PartialEmoji.from_str("<:eq_A:1393492005845209109>")
+TOTEM = PartialEmoji.from_str("<:eq_T:1393486785484554291>")
+CHARM = PartialEmoji.from_str("<:eq_C:1393492006948307035>")
+RING = PartialEmoji.from_str("<:eq_R:1393492008177238036>")
+MOUNT = PartialEmoji.from_str("<:eq_M:1393490756538466414>")
 
 PHYSICAL_DAMAGE = PartialEmoji.from_str("<:dam_PHYS:1382187865986826360>")
 MAGICAL_DAMAGE = PartialEmoji.from_str("<:dam_MAGI:1382187863940010127>")
@@ -65,8 +65,8 @@ PRIMARY_STATS = f"{STRENGTH}/{AGILITY}/{WILL}"
 ALLY_3X3 = PartialEmoji.from_str("<:ar_3X3ALLY:1387512237228429312>")
 ALL_3X3 = PartialEmoji.from_str("<:ar_3X3ALL:1387512235953356860>")
 
-RARITY_1 = "" # Not done yet
-RARITY_2 = "" # Not done yet
-RARITY_3 = "" # Not done yet
-RARITY_4 = "" # Not done yet
-RARITY_5 = "" # Not done yet
+RARITY_1 = PartialEmoji.from_str("<:rar_1:1393487657979347034>")
+RARITY_2 = PartialEmoji.from_str("<:rar_2:1393487659233710130>")
+RARITY_3 = PartialEmoji.from_str("<:rar_3:1393490757943558245>")
+RARITY_4 = PartialEmoji.from_str("<:rar_4:1393490759159779460>")
+RARITY_5 = PartialEmoji.from_str("<:rar_5:1393490760485310594>")

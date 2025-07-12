@@ -129,7 +129,7 @@ class Pets(commands.GroupCog, name="pet"):
             talent_rarities_unsorted.append(talent[0][5])
         talent_string = ""
         for talent in range(len(talents_unsorted)):
-            talent_string += f"{database.get_rarity_emoji(talent_rarities_unsorted[talent])}{talents_unsorted[talent]}\n"
+            talent_string += f"{database.get_rarity_emoji(talent_rarities_unsorted[talent])} {talents_unsorted[talent]}\n"
         powers_unsorted = []
         power_ids_unsorted = []
         power_rarities_unsorted = []
@@ -146,7 +146,7 @@ class Pets(commands.GroupCog, name="pet"):
             power_rarities_unsorted.append(power[0][5])
         power_string = ""
         for power in range(len(powers_unsorted)):
-            power_string += f"{database.get_rarity_emoji(power_rarities_unsorted[power])}{str(powers_unsorted[power])}\n"
+            power_string += f"{database.get_rarity_emoji(power_rarities_unsorted[power])} {str(powers_unsorted[power])}\n"
         
         pet_stat_string = ""
         pet_stat_string += f"{strength} Strength {database.get_stat_emoji('Strength')}\n"

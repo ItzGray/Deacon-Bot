@@ -90,7 +90,10 @@ class Items(commands.GroupCog, name="item"):
         real_name = row[2].decode("utf-8")
 
         item_name = await database.translate_name(self.bot.db, row[1])
-        item_image = row[3].decode("utf-8")
+        try:
+            item_image = row[3].decode("utf-8")
+        except:
+            item_image = None
         item_type = row[4]
         item_flags = row[5]
         item_reqs = [row[6], row[7], row[8], row[9]]
