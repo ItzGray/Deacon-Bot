@@ -315,6 +315,17 @@ async def fetch_curve(db, curve):
     
     return stats, types, levels, values
 
+async def fetch_unit_tags(db, id: int) -> List:
+    tags = []
+
+    async with db.execute(
+        "SELECT * FROM unit_tags WHERE unit_tags.unit == ?", (id,)
+    ) as cursor:
+        async for row in cursor:
+            tags.append(row[2])
+
+    return tags
+
 def get_item_icon_url(item_type: str) -> str:
     try:
         return _ITEMS[_ITEMS_STR.index(item_type)].url

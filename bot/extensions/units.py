@@ -103,9 +103,6 @@ class Units(commands.GroupCog, name="unit"):
         unit_school = row[5]
         unit_dmg_type = row[6]
         unit_primary_stat = database.translate_stat_flags(int(row[7]))
-        unit_beast_flag = row[8]
-        unit_undead_flag = row[9]
-        unit_bird_flag = row[10]
 
         unit_stats = await self.fetch_unit_stats(unit_id)
         unit_talents = await self.fetch_unit_talents(unit_id)
@@ -202,16 +199,57 @@ class Units(commands.GroupCog, name="unit"):
         if trained_power_string != "":
             embed.add_field(name="Trainable Powers", value=trained_power_string, inline=True)
             embed.add_field(name="\u200b", value="\u200b", inline=True)
+        elif starting_power_string != "":
+            embed.add_field(name="\u200b", value="\u200b", inline=True)
+            embed.add_field(name="\u200b", value="\u200b", inline=True)
 
+        unit_tags = await database.fetch_unit_tags(self.bot.db, unit_id)
         banner_string = ""
-        if unit_beast_flag == 1:
+        if b"WB_Beast" in unit_tags:
             banner_string += "Beastmaster Banners\n"
-        if unit_undead_flag == 1:
+        if b"WB_Undead" in unit_tags:
             banner_string += "Baron Samedi's Standard\n"
-        if unit_bird_flag == 1:
+        if b"WB_Fowl" in unit_tags:
             banner_string += "Imperator's Standard\n"
         if banner_string != "":
-            embed.add_field(name="Banner Boosts", value=banner_string, inline=False)
+            embed.add_field(name="Banner Boosts", value=banner_string, inline=True)
+        tag_string = ""
+        if b"ADJ_Event_Boss" in unit_tags:
+            tag_string += "Event Boss\n"
+        if b"ADJ_Event_Base" in unit_tags or b"ADJ_Event_Elite" in unit_tags:
+            tag_string += "Event Mob\n"
+        if b"ADJ_AmberHorde" in unit_tags:
+            tag_string += "Amber Horde\n"
+        if b"ADJ_Armada" in unit_tags:
+            tag_string += "Armada\n"
+        if b"ADJ_Cutthroat" in unit_tags:
+            tag_string += "Cutthroat\n"
+        if b"ADJ_InoshishiBandit" in unit_tags or b"ADJ_InoshishiWarlord" in unit_tags:
+            tag_string += "Inoshishi\n"
+        if b"ADJ_NinjPig" in unit_tags:
+            tag_string += "Ninja Pig\n"
+        if b"ADJ_WharfRat" in unit_tags:
+            tag_string += "Wharf Rat\n"
+        if b"ADJ_Troggy" in unit_tags or b"ADJ_TroggyArcher" in unit_tags or b"ADJ_TroggyChief" in unit_tags or b"ADJ_TroggyShaman" in unit_tags or b"ADJ_TroggyWarrior" in unit_tags:
+            tag_string += "Troggy\n"
+        if b"ADJ_WaterMole" in unit_tags or b"ADJ_WaterMole_Rebel" in unit_tags or b"ADJ_Waponi" in unit_tags:
+            tag_string += "Water Mole\n"
+        if b"ADJ_Undead" in unit_tags:
+            tag_string += "Undead\n"
+        if b"ADJ_Ophidian" in unit_tags:
+            tag_string += "Ophidian\n"
+        if b"ADJ_Vulture" in unit_tags:
+            tag_string += "Vulture\n"
+        if b"ADJ_GNT_MR_Mob" in unit_tags:
+            tag_string += "Aggrobah Job Gauntlet Mob\n"
+        if b"ADJ_GNT_MR_Brute" in unit_tags:
+            tag_string += "Aggrobah Job Gauntlet Brute\n"
+        if b"ADJ_GNT_MR_Wailer" in unit_tags:
+            tag_string += "Wailer\n"
+        if b"KTArmada" in unit_tags:
+            tag_string += "Zigazag Armada\n"
+        if tag_string != "":
+            embed.add_field(name="Tags", value=tag_string, inline=True)
 
         discord_file = None
         if unit_image:
@@ -428,7 +466,7 @@ class Units(commands.GroupCog, name="unit"):
             title_string += "\n" + unit_title
 
         unit_school = row[5]
-        unit_curve = row[11]
+        unit_curve = row[8]
 
         unit_modifiers = await self.fetch_unit_stats(unit_id)
 
