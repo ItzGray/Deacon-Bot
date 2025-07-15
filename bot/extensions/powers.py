@@ -618,7 +618,7 @@ class Powers(commands.GroupCog, name="power"):
             try:
                 await view.start(interaction)
             except discord.errors.HTTPException:
-                logger.info("List for '{}' too long, sending back error message")
+                logger.info("List for '{}' too long, sending back error message", name)
                 embed = discord.Embed(description=f"Power list for {name} too long! Try again with a more specific keyword.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
                 await interaction.followup.send(embed=embed)
         else:
