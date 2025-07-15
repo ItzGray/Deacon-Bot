@@ -420,6 +420,8 @@ class Units(commands.GroupCog, name="unit"):
             final_num = 0
             bonus_set = False
             no_operator = True
+            talent_gaps = [12, 32, 52, 72]
+            talent_subtract = 0
             for modifier in modifiers:
                 if modifier[2] != curr_stat:
                     continue
@@ -429,6 +431,12 @@ class Units(commands.GroupCog, name="unit"):
                     continue
                 if modifier[3] == "Multiply":
                     final_num = raw_num * modifier[4]
+                    # Hacky fix for low talent companions
+                    if modifier[2] == "Talent Slots" and modifier[4] == 0.8:
+                        for talent in talent_gaps:
+                            if level >= talent:
+                                talent_subtract += 1
+                        final_num = raw_num - talent_subtract
                     no_operator = False
                 elif modifier[3] == "Multiply Add":
                     final_num = raw_num + (raw_num * modifier[4])
