@@ -145,6 +145,8 @@ class Powers(commands.GroupCog, name="power"):
                 if "eDuration" in desc_split:
                     try:
                         duration_num = int(desc_split[-1])
+                        if duration_num == 1 and power_id == 1698747: # Fix for Deadly Shadowdance, I'll revisit this later if more powers start breaking
+                            duration_num = 2
                     except:
                         duration_num = 1
                     durations = []
@@ -159,6 +161,8 @@ class Powers(commands.GroupCog, name="power"):
                 if "ePercent" in desc_split:
                     try:
                         percent_num = int(desc_split[-1])
+                        if percent_num == 1 and power_id == 1698747: # Fix for Deadly Shadowdance, I'll revisit this later if more powers start breaking
+                            percent_num = 2
                         if desc_split[-3:] == "1.1":
                             percent_num = 2
                     except:
