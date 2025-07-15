@@ -143,9 +143,9 @@ class Units(commands.GroupCog, name="unit"):
                     starting_power_string += power_name + " " + " (" + object_name + ")\n"
                 elif talent[5] == "Trained":
                     trained_power_string += power_name + " " + " (" + object_name + ")\n"
-        if row[11] == 656670 and "Witch Hunter" not in trained_talent_string:
+        if row[8] == 656670 and "Witch Hunter" not in trained_talent_string:
             trained_talent_string += "Witch Hunter 2\n"
-        if row[11] == 656667 and "Alert" not in starting_talent_string:
+        if row[8] == 656667 and "Alert" not in starting_talent_string:
             starting_talent_string += "Alert 1\n"
         
         title_string = ""
