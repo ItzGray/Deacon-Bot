@@ -1,5 +1,9 @@
 import time
+import aiosqlite
+import os
+import asyncio
 from pathlib import Path
+from wand.image import Image
 from katsuba.wad import Archive # type: ignore
 from katsuba.op import * # type: ignore
 
@@ -25,251 +29,125 @@ class BinDeserializer:
             to_return = None
         return to_return
 
-def move_images_to_bot():
+async def move_images_to_bot():
     start = time.time()
-    output_path = Path("SummonedImages")
+    output_dir = Path.cwd() / "PNG_Images"
+    output_dir.mkdir(parents=True, exist_ok=True)
     mob_worlddata = Archive.mmap("Mob-WorldData.wad")
     player_worlddata = Archive.mmap("Player-WorldData.wad")
     root = Archive.mmap("Root.wad")
     shared_worlddata = Archive.mmap("_Shared-WorldData.wad")
     de = BinDeserializer("types.json")
-    tex_files_done = []
-    mount_files_done = []
-    for file in mob_worlddata.iter_glob("Character/**/Portraits/*.tex"):
-        filename = file.split("/")[-1].split(".")[0]
-        print(f"Extracting {filename} from Mob-WorldData.wad")
-        tex = de.deserialize_from_path(file, mob_worlddata)
-        try:
-            portrait_file = tex["m_baseTexture"].decode("utf-8").split("|")[-1]
-            data = mob_worlddata[portrait_file]
-        except:
-            continue
-        tex_files_done.append(portrait_file)
-        portrait_filename = portrait_file.split("/")[-1]
-        file_ext = portrait_file.split(".")[-1]
-        output_file_path = output_path / (filename + "." + file_ext)
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in mob_worlddata.iter_glob("Character/**/Portrait/*.tex"):
-        filename = file.split("/")[-1].split(".")[0]
-        print(f"Extracting {filename} from Mob-WorldData.wad")
-        tex = de.deserialize_from_path(file, mob_worlddata)
-        try:
-            portrait_file = tex["m_baseTexture"].decode("utf-8").split("|")[-1]
-            data = mob_worlddata[portrait_file]
-        except:
-            continue
-        tex_files_done.append(portrait_file)
-        portrait_filename = portrait_file.split("/")[-1]
-        file_ext = portrait_file.split(".")[-1]
-        output_file_path = output_path / (filename + "." + file_ext)
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in mob_worlddata.iter_glob("Character/**/Portraits/*.jpf"):
-        if file in tex_files_done:
-            continue
-        data = mob_worlddata[file]
-        filename = file.split("/")[-1]
-        output_file_path = output_path / filename
-        print(f"Extracting {filename} from Mob-WorldData.wad")
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in mob_worlddata.iter_glob("Character/**/portraits/*.jpf"):
-        if file in tex_files_done:
-            continue
-        data = mob_worlddata[file]
-        filename = file.split("/")[-1]
-        output_file_path = output_path / filename
-        print(f"Extracting {filename} from Mob-WorldData.wad")
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in mob_worlddata.iter_glob("Character/**/Portrait/*.jpf"):
-        if file in tex_files_done:
-            continue
-        data = mob_worlddata[file]
-        filename = file.split("/")[-1]
-        output_file_path = output_path / filename
-        print(f"Extracting {filename} from Mob-WorldData.wad")
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in mob_worlddata.iter_glob("Character/**/Portraits/*.dds"):
-        if file in tex_files_done:
-            continue
-        data = mob_worlddata[file]
-        filename = file.split("/")[-1]
-        output_file_path = output_path / filename
-        print(f"Extracting {filename} from Mob-WorldData.wad")
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in mob_worlddata.iter_glob("Character/**/Portrait/*.dds"):
-        if file in tex_files_done:
-            continue
-        data = mob_worlddata[file]
-        filename = file.split("/")[-1]
-        output_file_path = output_path / filename
-        print(f"Extracting {filename} from Mob-WorldData.wad")
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in mob_worlddata.iter_glob("Character/**/Player/*.dds"):
-        if file in tex_files_done:
-            continue
-        data = mob_worlddata[file]
-        filename = file.split("/")[-1]
-        output_file_path = output_path / filename
-        print(f"Extracting {filename} from Mob-WorldData.wad")
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in mob_worlddata.iter_glob("MountPortraits/*.tex"):
-        filename = file.split("/")[-1].split(".")[0]
-        print(f"Extracting {filename} from Mob-WorldData.wad")
-        tex = de.deserialize_from_path(file, mob_worlddata)
-        try:
-            portrait_file = tex["m_baseTexture"].decode("utf-8").split("|")[-1]
-            data = mob_worlddata[portrait_file]
-        except:
-            continue
-        tex_files_done.append(portrait_file)
-        portrait_filename = portrait_file.split("/")[-1]
-        file_ext = portrait_file.split(".")[-1]
-        output_file_path = output_path / (filename + "." + file_ext)
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in mob_worlddata.iter_glob("MountPortraits/*.jpf"):
-        if file in tex_files_done:
-            continue
-        data = mob_worlddata[file]
-        filename = file.split("/")[-1]
-        output_file_path = output_path / filename
-        print(f"Extracting {filename} from Mob-WorldData.wad")
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in mob_worlddata.iter_glob("MountPortraits/*.dds"):
-        if file in tex_files_done:
-            continue
-        data = mob_worlddata[file]
-        filename = file.split("/")[-1]
-        output_file_path = output_path / filename
-        print(f"Extracting {filename} from Mob-WorldData.wad")
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in mob_worlddata.iter_glob("StateObjects/FX/**/*.dds"):
-        if file in tex_files_done:
-            continue
-        data = mob_worlddata[file]
-        filename = file.split("/")[-1]
-        output_file_path = output_path / filename
-        print(f"Extracting {filename} from Mob-WorldData.wad")
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in player_worlddata.iter_glob("Character/Player/Icons/**/*.tex"):
-        filename = file.split("/")[-1].split(".")[0]
-        print(f"Extracting {filename} from Player-WorldData.wad")
-        tex = de.deserialize_from_path(file, player_worlddata)
-        try:
-            portrait_file = tex["m_baseTexture"].decode("utf-8").split("|")[-1]
-            data = player_worlddata[portrait_file]
-        except:
-            continue
-        tex_files_done.append(portrait_file)
-        portrait_filename = portrait_file.split("/")[-1]
-        file_ext = portrait_file.split(".")[-1]
-        output_file_path = output_path / (filename + "." + file_ext)
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in player_worlddata.iter_glob("Character/Player/Icons/**/*.dds"):
-        if file in tex_files_done:
-            continue
-        data = player_worlddata[file]
-        filename = file.split("/")[-1]
-        output_file_path = output_path / filename
-        print(f"Extracting {filename} from Player-WorldData.wad")
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in player_worlddata.iter_glob("Character/Player/Icons/**/*.jpf"):
-        if file in tex_files_done:
-            continue
-        data = player_worlddata[file]
-        filename = file.split("/")[-1]
-        output_file_path = output_path / filename
-        print(f"Extracting {filename} from Player-WorldData.wad")
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in player_worlddata.iter_glob("Character/Mounts/**/*.jpf"):
-        if file in tex_files_done:
-            continue
-        data = player_worlddata[file]
-        filename = file.split("/")[-1]
-        if filename in mount_files_done:
-            continue
-        mount_files_done.append(filename)
-        output_file_path = output_path / filename
-        print(f"Extracting {filename} from Player-WorldData.wad")
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in root.iter_glob("GUI/Powers/*.dds"):
-        data = root[file]
-        filename = file.split("/")[-1]
-        output_file_path = output_path / filename
-        print(f"Extracting {filename} from Root.wad")
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in root.iter_glob("GUI/Talents/*.dds"):
-        data = root[file]
-        filename = file.split("/")[-1]
-        output_file_path = output_path / filename
-        print(f"Extracting {filename} from Root.wad")
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in root.iter_glob("GUI/Talents/*.jpf"):
-        data = root[file]
-        filename = file.split("/")[-1]
-        output_file_path = output_path / filename
-        print(f"Extracting {filename} from Root.wad")
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in root.iter_glob("GUI/Icons/*.dds"):
-        data = root[file]
-        filename = file.split("/")[-1]
-        output_file_path = output_path / filename
-        print(f"Extracting {filename} from Root.wad")
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in root.iter_glob("Character/Player/Icons/**/*.dds"):
-        data = root[file]
-        filename = file.split("/")[-1]
-        output_file_path = output_path / filename
-        print(f"Extracting {filename} from Root.wad")
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in root.iter_glob("Character/Player/Icons/**/*.jpf"):
-        data = root[file]
-        filename = file.split("/")[-1]
-        output_file_path = output_path / filename
-        print(f"Extracting {filename} from Root.wad")
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in shared_worlddata.iter_glob("GUI/Powers/*.dds"):
-        data = shared_worlddata[file]
-        filename = file.split("/")[-1]
-        output_file_path = output_path / filename
-        print(f"Extracting {filename} from _Shared-WorldData.wad")
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in shared_worlddata.iter_glob("GUI/Powers/*.jpf"):
-        data = shared_worlddata[file]
-        filename = file.split("/")[-1]
-        output_file_path = output_path / filename
-        print(f"Extracting {filename} from _Shared-WorldData.wad")
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
-    for file in shared_worlddata.iter_glob("GUI/Doubloons/*.dds"):
-        data = shared_worlddata[file]
-        filename = file.split("/")[-1]
-        output_file_path = output_path / filename
-        print(f"Extracting {filename} from _Shared-WorldData.wad")
-        with open(output_file_path, "wb") as output_file:
-            output_file.write(data)
+    async with aiosqlite.connect("items.db") as temp_db:
+        db = await aiosqlite.connect(":memory:")
+        await temp_db.backup(db)
+    async with db.execute(
+        "SELECT * FROM vdfs"
+    ) as cursor:
+        async for row in cursor:
+            if row[2] == "":
+                continue
+            print(f"Processing: {row[2]}")
+            full_path = row[2]
+            if full_path.startswith("|_Shared|WorldData|"):
+                wad = shared_worlddata
+            elif full_path.startswith("|Mob|WorldData|"):
+                wad = mob_worlddata
+            elif full_path.startswith("|Player|WorldData|"):
+                wad = player_worlddata
+            path = full_path.split("|")[-1]
+            try:
+                path = path.split("?")[0]
+            except:
+                pass
+            try:
+                data = wad[path]
+            except:
+                data = root[path]
+            if row[1] == "Image":
+                if path.split(".")[-1] == "tex":
+                    deserialized_data = de.deserialize(data[4:])
+                    real_image_path = deserialized_data["m_baseTexture"].decode("utf-8")
+                    if real_image_path.startswith("|_Shared|WorldData|"):
+                        wad = shared_worlddata
+                    elif real_image_path.startswith("|Mob|WorldData|"):
+                        wad = mob_worlddata
+                    elif real_image_path.startswith("|Player|WorldData|"):
+                        wad = player_worlddata
+                    path = real_image_path.split("|")[-1]
+                    try:
+                        real_image_data = wad[path]
+                    except:
+                        try:
+                            real_image_data = root[path]
+                        except:
+                            print("No real image path!")
+                            continue
+                    data = real_image_data
+                output_path = output_dir / f"{path.split("/")[-1].split(".")[0]}.png"
+                with Image(blob=data) as img:
+                    img.save(filename=output_path)
+            elif row[1] == "VDF":
+                final_path = path
+                deserialized_data = de.deserialize(data[4:])
+                behaviors = deserialized_data["m_behaviors"]
+                draw_behavior = None
+                for behavior in behaviors:
+                    if behavior["m_behaviorName"] == b"DrawBehavior":
+                        draw_behavior = behavior
+                        break
+                if draw_behavior != None:
+                    try:
+                        image = draw_behavior["m_icons"][0].decode("utf-8")
+                    except:
+                        print("No icons!")
+                        continue
+                    image_split = image.split("/")[-1]
+                    try:
+                        image_split = image_split.split("?")[0]
+                    except:
+                        pass
+                    if image.startswith("|_Shared|WorldData|"):
+                        wad = shared_worlddata
+                    elif image.startswith("|Mob|WorldData|"):
+                        wad = mob_worlddata
+                    elif image.startswith("|Player|WorldData|"):
+                        wad = player_worlddata
+                    path = image.split("|")[-1].split("?")[0]
+                    try:
+                        data = wad[path]
+                    except:
+                        try:
+                            data = root[path]
+                        except:
+                            print("No path!")
+                            continue
+                    if image_split.split(".")[-1] == "tex":
+                        deserialized_data = de.deserialize(data[4:])
+                        real_image_path = deserialized_data["m_baseTexture"].decode("utf-8")
+                        if real_image_path.startswith("|_Shared|WorldData|"):
+                            wad = shared_worlddata
+                        elif real_image_path.startswith("|Mob|WorldData|"):
+                            wad = mob_worlddata
+                        elif real_image_path.startswith("|Player|WorldData|"):
+                            wad = player_worlddata
+                        path = real_image_path.split("|")[-1]
+                        try:
+                            real_image_data = wad[path]
+                        except:
+                            try:
+                                real_image_data = root[path]
+                            except:
+                                print("No real image path!")
+                                continue
+                    else:
+                        real_image_data = data
+                    output_path = output_dir / f"{final_path.split("/")[-1].split(".")[0]}.png"
+                    with Image(blob=real_image_data) as img:
+                        img.save(filename=output_path)
+
     print(f"Done! Wrote all files in {round(time.time() - start, 2)} seconds.")
+    return
 
 if __name__ == "__main__":
-    move_images_to_bot()
+    asyncio.run(move_images_to_bot())
