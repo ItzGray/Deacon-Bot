@@ -1,5 +1,5 @@
 import time
-from PIL import Image
+from wand.image import Image
 from pathlib import Path
 
 def convert_dds_to_png(dds_file, png_file):
@@ -10,11 +10,11 @@ def convert_dds_to_png(dds_file, png_file):
         png_file: The path to the PNG file.
     """
 
-    image = Image.open(dds_file)
     output_dir = Path.cwd() / "PNG_Images"
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / Path(png_file).name  # Use only the filename for saving
-    image.save(output_path, "PNG")
+    with Image(filename=dds_file) as img:
+        img.save(filename=output_path)
 
 if __name__ == "__main__":
     start = time.time()
