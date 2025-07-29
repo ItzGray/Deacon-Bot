@@ -68,7 +68,7 @@ class Secret(commands.GroupCog, name="secret"):
         current_hour = time.hour
         trainers = ["Kurotadori (Staffy)", "Firenzian (Shooty)", "Lost Hoplite (Melee)"]
         colors = [discord.Color.green(), discord.Color.orange(), discord.Color.red()]
-        portraits = ["Portrait_MS_Karasu_Tier_01", "Portrait_AQ_Centaur_02", "Portrait_AQ_Skeleton_Hoplite_02"]
+        portraits = ["MS_Karasu_Tier_01", "AQ_Centaur_02", "AQ_Skeleton_Hoplite_02"]
         trainer = trainers[current_hour % 3]
         color = colors[current_hour % 3]
         portrait = portraits[current_hour % 3]
@@ -85,6 +85,8 @@ class Secret(commands.GroupCog, name="secret"):
             color=color,
             description=f"The current secret trainer is **{trainer}**\nThe next secret trainer is going to be **{next_trainer}** at <t:{next_timestamp}:t>",
         ).set_author(name=f"Current secret trainer", icon_url=emojis.UNIVERSAL.url)
+        files = []
+        embeds = []
         try:
             image_name = portrait
             png_file = f"{image_name}.png"
@@ -93,12 +95,10 @@ class Secret(commands.GroupCog, name="secret"):
             file_path = Path("PNG_Images") / png_name
             discord_file = discord.File(file_path, filename=png_name)
             embed.set_thumbnail(url=f"attachment://{png_name}")
+            files.append(discord_file)
         except:
             pass
-        embeds = []
-        files = []
         embeds.append(embed)
-        files.append(discord_file)
         view = ItemView(embeds, files=files)
         await view.start(interaction)
     
@@ -118,17 +118,17 @@ class Secret(commands.GroupCog, name="secret"):
             message = SEPARATE_TRAINER_MESSAGES[0]
             color = discord.Color.green()
             emoji = emojis.STAFFY.url
-            portrait = "Portrait_MS_Karasu_Tier_01"
+            portrait = "MS_Karasu_Tier_01"
         elif trainer == "Firenzian (Shooty)":
             message = SEPARATE_TRAINER_MESSAGES[1]
             color = discord.Color.orange()
             emoji = emojis.SHOOTY.url
-            portrait = "Portrait_AQ_Centaur_02"
+            portrait = "AQ_Centaur_02"
         elif trainer == "Lost Hoplite (Melee)":
             message = SEPARATE_TRAINER_MESSAGES[2]
             color = discord.Color.red()
             emoji = emojis.SLASHY.url
-            portrait = "Portrait_AQ_Skeleton_Hoplite_02"
+            portrait = "AQ_Skeleton_Hoplite_02"
         
         trainer_split = trainer.split("(")[0][:-1]
         
@@ -137,6 +137,8 @@ class Secret(commands.GroupCog, name="secret"):
             description=message,
         ).set_author(name=f"{trainer_split}'s schedule", icon_url=emoji)
 
+        embeds = []
+        files = []
         try:
             image_name = portrait
             png_file = f"{image_name}.png"
@@ -145,12 +147,10 @@ class Secret(commands.GroupCog, name="secret"):
             file_path = Path("PNG_Images") / png_name
             discord_file = discord.File(file_path, filename=png_name)
             embed.set_thumbnail(url=f"attachment://{png_name}")
+            files.append(discord_file)
         except:
             pass
-        embeds = []
-        files = []
         embeds.append(embed)
-        files.append(discord_file)
         view = ItemView(embeds, files=files)
         await view.start(interaction)
 
