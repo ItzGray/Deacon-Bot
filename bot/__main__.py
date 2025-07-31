@@ -18,6 +18,7 @@ INTENTS = discord.Intents.none()
 INTENTS.emojis = True
 INTENTS.guilds = True
 INTENTS.guild_messages = True
+INTENTS.message_content = True
 
 
 def main():
@@ -28,7 +29,7 @@ def main():
 
     bot = TheBot(
         ITEMS_DB,
-        command_prefix=commands.when_mentioned,
+        command_prefix=commands.when_mentioned_or("."),
         case_insensitive=True,
         allowed_mentions=discord.AllowedMentions(
             everyone=False, roles=False, users=False
