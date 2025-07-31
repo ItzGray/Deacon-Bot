@@ -38,6 +38,7 @@ TOTEM = PartialEmoji.from_str("<:eq_T:1393486785484554291>")
 CHARM = PartialEmoji.from_str("<:eq_C:1393492006948307035>")
 RING = PartialEmoji.from_str("<:eq_R:1393492008177238036>")
 MOUNT = PartialEmoji.from_str("<:eq_M:1393490756538466414>")
+PET = PartialEmoji.from_str("<:eq_P:1400326752156258314>")
 
 PHYSICAL_DAMAGE = PartialEmoji.from_str("<:dam_PHYS:1382187865986826360>")
 MAGICAL_DAMAGE = PartialEmoji.from_str("<:dam_MAGI:1382187863940010127>")

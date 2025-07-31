@@ -165,7 +165,7 @@ class Pets(commands.GroupCog, name="pet"):
             discord.Embed(
                 color=discord.Color.greyple(),
             )
-            .set_author(name=f"{pet_name}\n({real_name}: {pet_id})")
+            .set_author(name=f"{pet_name}\n({real_name}: {pet_id})", icon_url=emojis.PET.url)
             .add_field(name="Base Talents", value=talent_string, inline=True)
             .add_field(name="Base Powers", value=power_string, inline=True)
             .add_field(name="Max Stats", value=pet_stat_string, inline=False)

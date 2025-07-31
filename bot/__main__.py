@@ -20,7 +20,6 @@ INTENTS.guilds = True
 INTENTS.guild_messages = True
 INTENTS.message_content = True
 
-
 def main():
     logger.remove()
     logger.enable("piratebot")
@@ -39,7 +38,6 @@ def main():
     )
 
     bot.run()
-
 
 if __name__ == "__main__":
     main()
