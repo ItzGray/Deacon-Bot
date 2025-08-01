@@ -56,6 +56,44 @@ AND (? = -1 OR items.equip_level = ?)
 COLLATE NOCASE
 """
 
+FIND_ITEM_WITH_TALENT_QUERY = """
+SELECT * FROM items
+INNER JOIN item_stats ON item_stats.item == items.id
+INNER JOIN talents ON talents.id == item_stats.stat
+INNER JOIN locale_en ON locale_en.id == talents.name
+WHERE locale_en.data == ? COLLATE NOCASE
+"""
+
+FIND_ITEM_WITH_POWER_QUERY = """
+SELECT * FROM items
+INNER JOIN item_stats ON item_stats.item == items.id
+INNER JOIN powers ON powers.id == item_stats.stat
+INNER JOIN locale_en ON locale_en.id == powers.name
+WHERE locale_en.data == ? COLLATE NOCASE
+"""
+
+FIND_ITEMS_WITH_TALENT_AND_FILTER_QUERY = """
+SELECT * FROM items
+INNER JOIN item_stats ON item_stats.item == items.id
+INNER JOIN talents ON talents.id == item_stats.stat
+INNER JOIN locale_en ON locale_en.id == talents.name
+WHERE locale_en.data == ? COLLATE NOCASE
+AND (? = 'Any' OR items.equip_school = ?)
+AND (? = 'Any' OR items.item_type = ?)
+AND (? = -1 OR items.equip_level = ?)
+"""
+
+FIND_ITEMS_WITH_POWER_AND_FILTER_QUERY = """
+SELECT * FROM items
+INNER JOIN item_stats ON item_stats.item == items.id
+INNER JOIN powers ON powers.id == item_stats.stat
+INNER JOIN locale_en ON locale_en.id == powers.name
+WHERE locale_en.data == ? COLLATE NOCASE
+AND (? = 'Any' OR items.equip_school = ?)
+AND (? = 'Any' OR items.item_type = ?)
+AND (? = -1 OR items.equip_level = ?)
+"""
+
 class Items(commands.GroupCog, name="item"):
     def __init__(self, bot: TheBot):
         self.bot = bot
@@ -84,6 +122,22 @@ class Items(commands.GroupCog, name="item"):
     async def fetch_item_stats(self, id: str) -> List[tuple]:
         async with self.bot.db.execute(FIND_ITEM_STATS_QUERY, (id,)) as cursor:
             return await cursor.fetchall()
+    
+    async def fetch_item_ability_list(self, ability: str) -> List[tuple]:
+        rows = []
+        async with self.bot.db.execute(FIND_ITEM_WITH_TALENT_QUERY, (ability,)) as cursor:
+            rows = rows + await cursor.fetchall()
+        async with self.bot.db.execute(FIND_ITEM_WITH_POWER_QUERY, (ability,)) as cursor:
+            rows = rows + await cursor.fetchall()
+        return rows
+    
+    async def fetch_item_ability_list_with_filter(self, ability: str, school: str, kind: str, level: int) -> List[tuple]:
+        rows = []
+        async with self.bot.db.execute(FIND_ITEMS_WITH_TALENT_AND_FILTER_QUERY, (ability,school,school,kind,kind,level,level)) as cursor:
+            rows = rows + await cursor.fetchall()
+        async with self.bot.db.execute(FIND_ITEMS_WITH_POWER_AND_FILTER_QUERY, (ability,school,school,kind,kind,level,level)) as cursor:
+            rows = rows + await cursor.fetchall()
+        return rows
         
     async def build_item_embed(self, row):
         item_id = row[0]
@@ -233,18 +287,23 @@ class Items(commands.GroupCog, name="item"):
             embed = discord.Embed(description=f"No items with name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
             await interaction.followup.send(embed=embed)
     
-    async def build_list_embed(self, rows: List[tuple], name: str):
+    async def build_list_embed(self, rows: List[tuple], name: str, list_type: str):
         desc_string = ""
         for row in rows:
             real_name = row[2].decode("utf-8")
             item_name = await database.translate_name(self.bot.db, row[1])
             item_type = row[4]
             desc_string += f"{database.get_item_emoji(item_type)} {item_name} ({real_name})\n"
+
+        if list_type == "List":
+            author = f"Searching for: {name}"
+        elif list_type == "Ability":
+            author = f"Searching for items with ability: {name}"
         
         embed = discord.Embed(
             color=discord.Color.greyple(),
             description=desc_string,
-        ).set_author(name=f"Searching for: {name}", icon_url=emojis.UNIVERSAL.url)
+        ).set_author(name=author, icon_url=emojis.UNIVERSAL.url)
 
         embeds = []
         embeds.append(embed)
@@ -273,7 +332,7 @@ class Items(commands.GroupCog, name="item"):
             rows = await self.fetch_item_list(name)
         
         if rows:
-            view = ItemView(await self.build_list_embed(rows, name))
+            view = ItemView(await self.build_list_embed(rows, name, "List"))
             try:
                 await view.start(interaction)
             except discord.errors.HTTPException:
@@ -283,6 +342,40 @@ class Items(commands.GroupCog, name="item"):
         else:
             logger.info("Failed to find list for '{}'", name)
             embed = discord.Embed(description=f"No items containing name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
+            await interaction.followup.send(embed=embed)
+
+    @app_commands.command(name="abilitysearch", description="Searches for items that contain a given ability")
+    @app_commands.describe(name="The name of the ability to search for")
+    async def abilitysearch(
+        self,
+        interaction: discord.Interaction,
+        name: str,
+        school: Optional[Literal["Any", "Buccaneer", "Privateer", "Witchdoctor", "Musketeer", "Swashbuckler"]] = "Any",
+        kind: Optional[Literal["Hat", "Outfit", "Boots", "Weapon", "Accessory", "Totem", "Charm", "Ring", "Mount"]] = "Any",
+        level: Optional[int] = -1,
+    ):
+        await interaction.response.defer()
+        if type(interaction.channel) is DMChannel or type(interaction.channel) is PartialMessageable:
+            logger.info("{} requested item list for ability '{}'", interaction.user.name, name)
+        else:
+            logger.info("{} requested item list for ability '{}' in channel #{} of {}", interaction.user.name, name, interaction.channel.name, interaction.guild.name)
+        
+        if school != "Any" or kind != "Any" or level != -1:
+            rows = await self.fetch_item_ability_list_with_filter(name, school, kind, level)
+        else:
+            rows = await self.fetch_item_ability_list(name)
+        
+        if rows:
+            view = ItemView(await self.build_list_embed(rows, name, "Ability"))
+            try:
+                await view.start(interaction)
+            except discord.errors.HTTPException:
+                logger.info("List for '{}' too long, sending back error message", name)
+                embed = discord.Embed(description=f"Item list for ability {name} too long! Try again with a more specific keyword.").set_author(name=f"Searching for items with ability: {name}", icon_url=emojis.UNIVERSAL.url)
+                await interaction.followup.send(embed=embed)
+        else:
+            logger.info("Failed to find list for ability '{}'", name)
+            embed = discord.Embed(description=f"No items with ability {name} found.").set_author(name=f"Searching for items with ability: {name}", icon_url=emojis.UNIVERSAL.url)
             await interaction.followup.send(embed=embed)
 
 async def setup(bot: TheBot):
