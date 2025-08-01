@@ -267,7 +267,7 @@ class Units(commands.GroupCog, name="unit"):
         return embed, discord_file
     
     @app_commands.command(name="find", description="Finds a Pirate101 unit by name")
-    @app_commands.describe(name="The name of the unit to search for")
+    @app_commands.describe(name="The name of the unit to search for", school="The class of the unit", kind="Whether the unit is an ally or enemy")
     async def find(
         self,
         interaction: discord.Interaction,
@@ -333,13 +333,13 @@ class Units(commands.GroupCog, name="unit"):
         return embeds
     
     @app_commands.command(name="list", description="Finds a list of units that contain a given string")
-    @app_commands.describe(name="The name of the units to search for")
+    @app_commands.describe(name="The name of the units to search for", school="The class of the units", kind="Whether the units are allies or enemies")
     async def list(
         self,
         interaction: discord.Interaction,
         name: str,
-        school: Optional[Literal["Any", "Buccaneer", "Privateer", "Witchdoctor", "Musketeer", "Swashbuckler"]] = "Any",
-        kind: Optional[Literal["Any", "Ally", "Enemy"]] = "Any",
+        school: Optional[Literal["Buccaneer", "Privateer", "Witchdoctor", "Musketeer", "Swashbuckler"]] = "Any",
+        kind: Optional[Literal["Ally", "Enemy"]] = "Any",
     ):
         await interaction.response.defer()
         if type(interaction.channel) is DMChannel or type(interaction.channel) is PartialMessageable:

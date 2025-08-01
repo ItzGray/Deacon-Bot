@@ -243,7 +243,7 @@ class Talents(commands.GroupCog, name="talent"):
         return embed, discord_file
     
     @app_commands.command(name="find", description="Finds a Pirate101 talent by name")
-    @app_commands.describe(name="The name of the talent to search for")
+    @app_commands.describe(name="The name of the talent to search for", ranks="The number of ranks the talent has")
     async def find(
         self,
         interaction: discord.Interaction,
@@ -303,7 +303,7 @@ class Talents(commands.GroupCog, name="talent"):
         return embeds
     
     @app_commands.command(name="list", description="Finds a list of talents that contain a given string")
-    @app_commands.describe(name="The name of the talents to search for")
+    @app_commands.describe(name="The name of the talents to search for", ranks="The number of ranks the talents have")
     async def list(
         self,
         interaction: discord.Interaction,

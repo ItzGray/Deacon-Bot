@@ -1,3 +1,4 @@
+import aiosqlite
 import discord
 from discord import app_commands, PartialMessageable, DMChannel
 from discord.ext import commands
@@ -50,6 +51,17 @@ class Owner(commands.Cog):
         except Exception as e:
             logger.info(f"Failed to load extension {extension}: {e}")
             await ctx.send(f"Failed to load extension {extension}: {e}")
+
+    @commands.command(name="db")
+    @commands.is_owner()
+    async def reload_db(
+        self,
+        ctx,
+    ):
+        async with aiosqlite.connect(self.bot.db_path) as db:
+            self.bot.db = await aiosqlite.connect(":memory:")
+            await db.backup(self.bot.db)
+        await ctx.send("Database reloaded.")
 
 async def setup(bot: TheBot):
     await bot.add_cog(Owner(bot))

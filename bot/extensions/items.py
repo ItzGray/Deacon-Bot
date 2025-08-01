@@ -36,7 +36,7 @@ INNER JOIN locale_en ON locale_en.id == items.name
 WHERE locale_en.data == ? COLLATE NOCASE
 AND (? = 'Any' OR items.equip_school = ?)
 AND (? = 'Any' OR items.item_type = ?)
-AND (? = -1 OR items.equip_level = ?)
+AND (? = -1 OR items.equip_level >= ?)
 COLLATE NOCASE
 """
 
@@ -52,7 +52,7 @@ INNER JOIN locale_en ON locale_en.id == items.name
 WHERE INSTR(lower(locale_en.data), ?) > 0
 AND (? = 'Any' OR items.equip_school = ?)
 AND (? = 'Any' OR items.item_type = ?)
-AND (? = -1 OR items.equip_level = ?)
+AND (? = -1 OR items.equip_level >= ?)
 COLLATE NOCASE
 """
 
@@ -80,7 +80,7 @@ INNER JOIN locale_en ON locale_en.id == talents.name
 WHERE locale_en.data == ? COLLATE NOCASE
 AND (? = 'All' OR items.equip_school = ?)
 AND (? = 'Any' OR items.item_type = ?)
-AND (? = -1 OR items.equip_level = ?)
+AND (? = -1 OR items.equip_level >= ?)
 """
 
 FIND_ITEMS_WITH_POWER_AND_FILTER_QUERY = """
@@ -91,7 +91,7 @@ INNER JOIN locale_en ON locale_en.id == powers.name
 WHERE locale_en.data == ? COLLATE NOCASE
 AND (? = 'All' OR items.equip_school = ?)
 AND (? = 'Any' OR items.item_type = ?)
-AND (? = -1 OR items.equip_level = ?)
+AND (? = -1 OR items.equip_level >= ?)
 """
 
 class Items(commands.GroupCog, name="item"):
@@ -245,7 +245,7 @@ class Items(commands.GroupCog, name="item"):
         return embed, discord_file
     
     @app_commands.command(name="find", description="Finds a Pirate101 item by name")
-    @app_commands.describe(name="The name of the item to search for")
+    @app_commands.describe(name="The name of the item to search for", school="The class the item requires", kind="The type of item to search for", level="The level the item requires (also includes items that require a higher level)")
     async def find(
         self,
         interaction: discord.Interaction,
@@ -319,7 +319,7 @@ class Items(commands.GroupCog, name="item"):
         return embeds
     
     @app_commands.command(name="list", description="Finds a list of items that contain a given string")
-    @app_commands.describe(name="The name of the items to search for")
+    @app_commands.describe(name="The name of the items to search for", school="The class the items require", kind="The type of items to search for", level="The level the items require (also includes items that require a higher level)")
     async def list(
         self,
         interaction: discord.Interaction,
@@ -355,7 +355,7 @@ class Items(commands.GroupCog, name="item"):
             await interaction.followup.send(embed=embed)
 
     @app_commands.command(name="abilitysearch", description="Searches for items that have a given ability")
-    @app_commands.describe(name="The name of the ability to search for")
+    @app_commands.describe(name="The name of the ability to search for", school="The class the items require", kind="The type of items to search for", level="The level the items require (also includes items that require a higher level)")
     async def abilitysearch(
         self,
         interaction: discord.Interaction,

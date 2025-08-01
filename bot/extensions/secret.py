@@ -103,6 +103,7 @@ class Secret(commands.GroupCog, name="secret"):
         await view.start(interaction)
     
     @app_commands.command(name="type", description="Displays the schedule for a certain secret trainer")
+    @app_commands.describe(trainer="The secret trainer to get the schedule for")
     async def type(
         self,
         interaction: discord.Interaction,
