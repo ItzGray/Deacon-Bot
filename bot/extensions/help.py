@@ -13,6 +13,7 @@ HELP_DESCRIPTION = """
 **/help**: Displays this message\n
 **/item find**: Finds the item's ingame stats. Parameters: Name, Class, Kind, Level\n
 **/item list**: Finds a list of items containing a given string. Parameters: Name, Class, Kind, Level\n
+**/item abilitysearch**: Searches for items that have a given ability. Parameters: Name, School, Kind, Level\n
 **/unit find**: Finds the unit's ingame stats. Parameters: Name, Class, Kind\n
 **/unit list**: Finds a list of units containing a given string. Parameters: Name, Class, Kind\n
 **/unit calc**: Calculates the stats of a unit at a given level. Parameters: Name, Level, Class, Kind\n

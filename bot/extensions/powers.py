@@ -586,19 +586,24 @@ class Powers(commands.GroupCog, name="power"):
             await interaction.followup.send(embed=embed)
     
     async def build_list_embed(self, rows: List[tuple], name: str):
-        desc_string = ""
+        desc_strings = []
+        desc_index = 0
+        desc_strings.append("")
         for row in rows:
             real_name = row[2].decode("utf-8")
             power_name = await database.translate_name(self.bot.db, row[1])
-            desc_string += f"{power_name} ({real_name})\n"
+            if len(desc_strings[desc_index]) >= 1000:
+                desc_index += 1
+                desc_strings.append("")
+            desc_strings[desc_index] += f"{power_name} ({real_name})\n"
         
-        embed = discord.Embed(
-            color=discord.Color.greyple(),
-            description=desc_string,
-        ).set_author(name=f"Searching for: {name}", icon_url=emojis.UNIVERSAL.url)
-
         embeds = []
-        embeds.append(embed)
+        for string in desc_strings:
+            embed = discord.Embed(
+                color=discord.Color.greyple(),
+                description=string,
+            ).set_author(name=f"Searching for: {name}", icon_url=emojis.UNIVERSAL.url)
+            embeds.append(embed)
 
         return embeds
 

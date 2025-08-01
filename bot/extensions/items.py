@@ -78,7 +78,7 @@ INNER JOIN item_stats ON item_stats.item == items.id
 INNER JOIN talents ON talents.id == item_stats.stat
 INNER JOIN locale_en ON locale_en.id == talents.name
 WHERE locale_en.data == ? COLLATE NOCASE
-AND (? = 'Any' OR items.equip_school = ?)
+AND (? = 'All' OR items.equip_school = ?)
 AND (? = 'Any' OR items.item_type = ?)
 AND (? = -1 OR items.equip_level = ?)
 """
@@ -89,7 +89,7 @@ INNER JOIN item_stats ON item_stats.item == items.id
 INNER JOIN powers ON powers.id == item_stats.stat
 INNER JOIN locale_en ON locale_en.id == powers.name
 WHERE locale_en.data == ? COLLATE NOCASE
-AND (? = 'Any' OR items.equip_school = ?)
+AND (? = 'All' OR items.equip_school = ?)
 AND (? = 'Any' OR items.item_type = ?)
 AND (? = -1 OR items.equip_level = ?)
 """
@@ -250,7 +250,7 @@ class Items(commands.GroupCog, name="item"):
         self,
         interaction: discord.Interaction,
         name: str,
-        school: Optional[Literal["Any", "Buccaneer", "Privateer", "Witchdoctor", "Musketeer", "Swashbuckler"]] = "Any",
+        school: Optional[Literal["Any", "Buccaneer", "Privateer", "Witchdoctor", "Musketeer", "Swashbuckler"]] = "All",
         kind: Optional[Literal["Hat", "Outfit", "Boots", "Weapon", "Accessory", "Totem", "Charm", "Ring", "Mount"]] = "Any",
         level: Optional[int] = -1,
         use_object_name: Optional[bool] = False,
@@ -268,7 +268,9 @@ class Items(commands.GroupCog, name="item"):
                 await interaction.followup.send(embed=embed)
         
         else:
-            if school != "Any" or kind != "Any" or level != -1:
+            if school != "All" or kind != "Any" or level != -1:
+                if school == "Any":
+                    school = ""
                 rows = await self.fetch_item_with_filter(name, school, kind, level)
             else:
                 rows = await self.fetch_item(name)
@@ -288,25 +290,31 @@ class Items(commands.GroupCog, name="item"):
             await interaction.followup.send(embed=embed)
     
     async def build_list_embed(self, rows: List[tuple], name: str, list_type: str):
-        desc_string = ""
+        desc_strings = []
+        desc_index = 0
+        desc_strings.append("")
         for row in rows:
             real_name = row[2].decode("utf-8")
             item_name = await database.translate_name(self.bot.db, row[1])
             item_type = row[4]
-            desc_string += f"{database.get_item_emoji(item_type)} {item_name} ({real_name})\n"
+            item_class = row[6]
+            if len(desc_strings[desc_index]) >= 2500:
+                desc_index += 1
+                desc_strings.append("")
+            desc_strings[desc_index] += f"{database.get_school_emoji(item_class)}{database.get_item_emoji(item_type)} {item_name} ({real_name})\n"
 
         if list_type == "List":
             author = f"Searching for: {name}"
         elif list_type == "Ability":
             author = f"Searching for items with ability: {name}"
-        
-        embed = discord.Embed(
-            color=discord.Color.greyple(),
-            description=desc_string,
-        ).set_author(name=author, icon_url=emojis.UNIVERSAL.url)
 
         embeds = []
-        embeds.append(embed)
+        for string in desc_strings:
+            embed = discord.Embed(
+                color=discord.Color.greyple(),
+                description=string,
+            ).set_author(name=author, icon_url=emojis.UNIVERSAL.url)
+            embeds.append(embed)
 
         return embeds
     
@@ -316,7 +324,7 @@ class Items(commands.GroupCog, name="item"):
         self,
         interaction: discord.Interaction,
         name: str,
-        school: Optional[Literal["Any", "Buccaneer", "Privateer", "Witchdoctor", "Musketeer", "Swashbuckler"]] = "Any",
+        school: Optional[Literal["Any", "Buccaneer", "Privateer", "Witchdoctor", "Musketeer", "Swashbuckler"]] = "All",
         kind: Optional[Literal["Hat", "Outfit", "Boots", "Weapon", "Accessory", "Totem", "Charm", "Ring", "Mount"]] = "Any",
         level: Optional[int] = -1,
     ):
@@ -326,7 +334,9 @@ class Items(commands.GroupCog, name="item"):
         else:
             logger.info("{} requested item list for '{}' in channel #{} of {}", interaction.user.name, name, interaction.channel.name, interaction.guild.name)
         
-        if school != "Any" or kind != "Any" or level != -1:
+        if school != "All" or kind != "Any" or level != -1:
+            if school == "Any":
+                school = ""
             rows = await self.fetch_item_list_with_filter(name, school, kind, level)
         else:
             rows = await self.fetch_item_list(name)
@@ -344,13 +354,13 @@ class Items(commands.GroupCog, name="item"):
             embed = discord.Embed(description=f"No items containing name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
             await interaction.followup.send(embed=embed)
 
-    @app_commands.command(name="abilitysearch", description="Searches for items that contain a given ability")
+    @app_commands.command(name="abilitysearch", description="Searches for items that have a given ability")
     @app_commands.describe(name="The name of the ability to search for")
     async def abilitysearch(
         self,
         interaction: discord.Interaction,
         name: str,
-        school: Optional[Literal["Any", "Buccaneer", "Privateer", "Witchdoctor", "Musketeer", "Swashbuckler"]] = "Any",
+        school: Optional[Literal["Any", "Buccaneer", "Privateer", "Witchdoctor", "Musketeer", "Swashbuckler"]] = "All",
         kind: Optional[Literal["Hat", "Outfit", "Boots", "Weapon", "Accessory", "Totem", "Charm", "Ring", "Mount"]] = "Any",
         level: Optional[int] = -1,
     ):
@@ -360,7 +370,9 @@ class Items(commands.GroupCog, name="item"):
         else:
             logger.info("{} requested item list for ability '{}' in channel #{} of {}", interaction.user.name, name, interaction.channel.name, interaction.guild.name)
         
-        if school != "Any" or kind != "Any" or level != -1:
+        if school != "All" or kind != "Any" or level != -1:
+            if school == "Any":
+                school = ""
             rows = await self.fetch_item_ability_list_with_filter(name, school, kind, level)
         else:
             rows = await self.fetch_item_ability_list(name)
