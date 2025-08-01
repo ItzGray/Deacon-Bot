@@ -34,7 +34,7 @@ FIND_ITEMS_WITH_FILTER_QUERY = """
 SELECT * FROM items
 INNER JOIN locale_en ON locale_en.id == items.name
 WHERE locale_en.data == ? COLLATE NOCASE
-AND (? = 'Any' OR items.equip_school = ?)
+AND (? = 'All' OR items.equip_school = ?)
 AND (? = 'Any' OR items.item_type = ?)
 AND (? = -1 OR items.equip_level >= ?)
 COLLATE NOCASE
@@ -50,7 +50,7 @@ FIND_ITEMS_CONTAIN_STRING_WITH_FILTER_QUERY = """
 SELECT * FROM items
 INNER JOIN locale_en ON locale_en.id == items.name
 WHERE INSTR(lower(locale_en.data), ?) > 0
-AND (? = 'Any' OR items.equip_school = ?)
+AND (? = 'All' OR items.equip_school = ?)
 AND (? = 'Any' OR items.item_type = ?)
 AND (? = -1 OR items.equip_level >= ?)
 COLLATE NOCASE
