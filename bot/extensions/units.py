@@ -317,7 +317,7 @@ class Units(commands.GroupCog, name="unit"):
             if f" - {unit_name}" == unit_title or unit_title == " - ":
                 unit_title = ""
             unit_school = row[5]
-            if len(desc_strings[desc_index]) >= 1000:
+            if len(desc_strings[desc_index]) >= 1500:
                 desc_index += 1
                 desc_strings.append("")
             desc_strings[desc_index] += f"{database.get_school_emoji(unit_school)} {unit_name}{unit_title} ({real_name})\n"
