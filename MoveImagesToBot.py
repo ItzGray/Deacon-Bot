@@ -86,7 +86,10 @@ async def move_images_to_bot():
                     data = real_image_data
                 output_path = output_dir / f"{path.split("/")[-1].split(".")[0]}.png"
                 with Image(blob=data) as img:
-                    img.save(filename=output_path)
+                    try:
+                        img.save(filename=output_path)
+                    except:
+                        print(f"Failed to save {output_path}!")
             elif row[1] == "VDF":
                 final_path = path
                 deserialized_data = de.deserialize(data[4:])
@@ -144,8 +147,11 @@ async def move_images_to_bot():
                         real_image_data = data
                     output_path = output_dir / f"{final_path.split("/")[-1].split(".")[0]}.png"
                     with Image(blob=real_image_data) as img:
-                        img.save(filename=output_path)
-
+                        try:
+                            img.save(filename=output_path)
+                        except:
+                            print(f"Failed to save {output_path}!")
+    await db.close()
     print(f"Done! Wrote all files in {round(time.time() - start, 2)} seconds.")
     return
 
