@@ -11,6 +11,8 @@ from discord import app_commands, PartialMessageable, DMChannel
 from discord.ext import commands
 from loguru import logger
 
+from .talents import Talents
+from .powers import Powers
 from .. import TheBot, database, emojis
 from ..menus import ItemView
 
@@ -94,6 +96,16 @@ AND (? = 'Any' OR items.item_type = ?)
 AND (? = -1 OR items.equip_level >= ?)
 """
 
+FIND_ITEMS_WITH_FILTER_PLACEHOLDER_QUERY = """
+SELECT * FROM items
+INNER JOIN locale_en ON locale_en.id == items.name
+WHERE locale_en.data COLLATE NOCASE IN ({placeholders})
+AND (? = 'All' OR items.equip_school = ?)
+AND (? = 'Any' OR items.item_type = ?)
+AND (? = -1 OR items.equip_level >= ?)
+COLLATE NOCASE
+"""
+
 class Items(commands.GroupCog, name="item"):
     def __init__(self, bot: TheBot):
         self.bot = bot
@@ -138,6 +150,29 @@ class Items(commands.GroupCog, name="item"):
         async with self.bot.db.execute(FIND_ITEMS_WITH_POWER_AND_FILTER_QUERY, (ability,school,school,kind,kind,level,level)) as cursor:
             rows = rows + await cursor.fetchall()
         return rows
+    
+    async def fetch_item_filter_list(self, items, school: str, kind: str, level: int) -> List[tuple]:
+        if isinstance(items, str):
+            items = [items]
+
+        results = []
+        for chunk in database.sql_chunked(items, 900):  # Stay under SQLite's limit
+            placeholders = database._make_placeholders(len(chunk))
+            query = FIND_ITEMS_WITH_FILTER_PLACEHOLDER_QUERY.format(placeholders=placeholders)
+
+            args = (
+                *chunk,
+                school, school,
+                kind, kind,
+                level, level
+            )
+
+            async with self.bot.db.execute(query, args) as cursor:
+                rows = await cursor.fetchall()
+
+            results.extend(rows)
+
+        return results
         
     async def build_item_embed(self, row):
         item_id = row[0]
@@ -277,6 +312,17 @@ class Items(commands.GroupCog, name="item"):
                 if not rows:
                     mount_name = f"{name} (PERM)"
                     rows = await self.fetch_item(mount_name)
+            if not rows:
+                filtered_rows = await self.fetch_item_filter_list(items=self.bot.item_list, school=school, kind=kind, level=level)
+                closest_rows = [(row, fuzz.token_set_ratio(name, row[-1]) + fuzz.ratio(name, row[-1])) for row in filtered_rows]
+                closest_rows = sorted(closest_rows, key=lambda x: x[1], reverse=True)
+                closest_rows = list(zip(*closest_rows))[0]
+                if school != "All" or kind != "Any" or level != -1:
+                    rows = await self.fetch_item_with_filter(name=closest_rows[0][-1], school=school, kind=kind, level=level)
+                else:
+                    rows = await self.fetch_item(name=closest_rows[0][-1])
+                if rows:
+                    logger.info("Failed to find '{}' instead searching for {}", name, closest_rows[0][-1])
         
         if rows:
             embeds = [await self.build_item_embed(row) for row in rows]
@@ -376,6 +422,21 @@ class Items(commands.GroupCog, name="item"):
             rows = await self.fetch_item_ability_list_with_filter(name, school, kind, level)
         else:
             rows = await self.fetch_item_ability_list(name)
+        if not rows:
+            talents = Talents(self.bot)
+            powers = Powers(self.bot)
+            filtered_rows = await talents.fetch_talent_filter_list(items=self.bot.talent_list, ranks=-1)
+            filtered_rows.extend(await powers.fetch_power_filter_list(items=self.bot.power_list))
+            closest_rows = [(row, fuzz.token_set_ratio(name, row[-1]) + fuzz.ratio(name, row[-1])) for row in filtered_rows]
+            closest_rows = sorted(closest_rows, key=lambda x: x[1], reverse=True)
+            closest_rows = list(zip(*closest_rows))[0]
+            if school != "All" or kind != "Any" or level != -1:
+                rows = await self.fetch_item_ability_list_with_filter(ability=closest_rows[0][-1], school=school, kind=kind, level=level)
+            else:
+                rows = await self.fetch_item_ability_list(ability=closest_rows[0][-1])
+            name = closest_rows[0][-1]
+            if rows:
+                logger.info("Failed to find '{}' instead searching for {}", name, closest_rows[0][-1])
         
         if rows:
             view = ItemView(await self.build_list_embed(rows, name, "Ability"))

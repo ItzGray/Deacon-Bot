@@ -59,6 +59,15 @@ AND (? = 'Any' OR units.kind = ?)
 COLLATE NOCASE
 """
 
+FIND_UNIT_WITH_FILTER_PLACEHOLDER_QUERY = """
+SELECT * FROM units
+INNER JOIN locale_en ON locale_en.id == units.name
+WHERE locale_en.data COLLATE NOCASE IN ({placeholders})
+AND (? = 'Any' OR units.school = ?)
+AND (? = 'Any' OR units.kind = ?)
+COLLATE NOCASE
+"""
+
 class Units(commands.GroupCog, name="unit"):
     def __init__(self, bot: TheBot):
         self.bot = bot
@@ -91,6 +100,28 @@ class Units(commands.GroupCog, name="unit"):
     async def fetch_unit_talents(self, id: str) -> List[tuple]:
         async with self.bot.db.execute(FIND_UNIT_TALENTS_QUERY, (id,)) as cursor:
             return await cursor.fetchall()
+    
+    async def fetch_unit_filter_list(self, items, school: str, kind: str) -> List[tuple]:
+        if isinstance(items, str):
+            items = [items]
+
+        results = []
+        for chunk in database.sql_chunked(items, 900):  # Stay under SQLite's limit
+            placeholders = database._make_placeholders(len(chunk))
+            query = FIND_UNIT_WITH_FILTER_PLACEHOLDER_QUERY.format(placeholders=placeholders)
+
+            args = (
+                *chunk,
+                school, school,
+                kind, kind,
+            )
+
+            async with self.bot.db.execute(query, args) as cursor:
+                rows = await cursor.fetchall()
+
+            results.extend(rows)
+
+        return results
         
     async def build_unit_embed(self, row):
         unit_id = row[0]
@@ -272,8 +303,8 @@ class Units(commands.GroupCog, name="unit"):
         self,
         interaction: discord.Interaction,
         name: str,
-        school: Optional[Literal["Any", "Buccaneer", "Privateer", "Witchdoctor", "Musketeer", "Swashbuckler"]] = "Any",
-        kind: Optional[Literal["Any", "Ally", "Enemy"]] = "Any",
+        school: Optional[Literal["Buccaneer", "Privateer", "Witchdoctor", "Musketeer", "Swashbuckler"]] = "Any",
+        kind: Optional[Literal["Ally", "Enemy"]] = "Any",
         use_object_name: Optional[bool] = False,
     ):
         await interaction.response.defer()
@@ -293,6 +324,17 @@ class Units(commands.GroupCog, name="unit"):
                 rows = await self.fetch_unit_with_filter(name, school, kind)
             else:
                 rows = await self.fetch_unit(name)
+            if not rows:
+                filtered_rows = await self.fetch_unit_filter_list(items=self.bot.unit_list, school=school, kind=kind)
+                closest_rows = [(row, fuzz.token_set_ratio(name, row[-1]) + fuzz.ratio(name, row[-1])) for row in filtered_rows]
+                closest_rows = sorted(closest_rows, key=lambda x: x[1], reverse=True)
+                closest_rows = list(zip(*closest_rows))[0]
+                if school != "Any" or kind != "Any":
+                    rows = await self.fetch_unit_with_filter(name=closest_rows[0][-1], school=school, kind=kind)
+                else:
+                    rows = await self.fetch_unit(name=closest_rows[0][-1])
+                if rows:
+                    logger.info("Failed to find '{}' instead searching for {}", name, closest_rows[0][-1])
         
         if rows:
             embeds = [await self.build_unit_embed(row) for row in rows]
@@ -512,7 +554,7 @@ class Units(commands.GroupCog, name="unit"):
 
         return embed, discord_file
     
-    @app_commands.command(name="calc", description="Calculates a unit's stats at a given level")
+    @app_commands.command(name="calc", description="Calculates a unit's stats at a given level (WARNING: Slightly inaccurate)")
     @app_commands.describe(name="The name of the unit to search for")
     async def calc(
         self,
@@ -540,6 +582,17 @@ class Units(commands.GroupCog, name="unit"):
                 rows = await self.fetch_unit_with_filter(name, school, kind)
             else:
                 rows = await self.fetch_unit(name)
+            if not rows:
+                filtered_rows = await self.fetch_unit_filter_list(items=self.bot.unit_list, school=school, kind=kind)
+                closest_rows = [(row, fuzz.token_set_ratio(name, row[-1]) + fuzz.ratio(name, row[-1])) for row in filtered_rows]
+                closest_rows = sorted(closest_rows, key=lambda x: x[1], reverse=True)
+                closest_rows = list(zip(*closest_rows))[0]
+                if school != "Any" or kind != "Any":
+                    rows = await self.fetch_unit_with_filter(name=closest_rows[0][-1], school=school, kind=kind)
+                else:
+                    rows = await self.fetch_unit(name=closest_rows[0][-1])
+                if rows:
+                    logger.info("Failed to find '{}' instead searching for {}", name, closest_rows[0][-1])
 
         if rows:
             embeds = [await self.build_calc_embed(row, level) for row in rows]

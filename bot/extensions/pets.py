@@ -48,6 +48,12 @@ LEFT JOIN locale_en ON locale_en.id == pets.name
 WHERE INSTR(lower(locale_en.data), ?) > 0
 """
 
+FIND_PET_PLACEHOLDER_QUERY = """
+SELECT * FROM pets
+INNER JOIN locale_en ON locale_en.id == pets.name
+WHERE locale_en.data COLLATE NOCASE IN ({placeholders})
+"""
+
 def remove_indices(lst, indices):
     return [value for index, value in enumerate(lst) if index not in indices]
 
@@ -93,6 +99,26 @@ class Pets(commands.GroupCog, name="pet"):
                 final_powers.append(await cursor.fetchall())
         
         return final_powers
+    
+    async def fetch_pet_filter_list(self, items) -> List[tuple]:
+        if isinstance(items, str):
+            items = [items]
+
+        results = []
+        for chunk in database.sql_chunked(items, 900):  # Stay under SQLite's limit
+            placeholders = database._make_placeholders(len(chunk))
+            query = FIND_PET_PLACEHOLDER_QUERY.format(placeholders=placeholders)
+
+            args = (
+                *chunk,
+            )
+
+            async with self.bot.db.execute(query, args) as cursor:
+                rows = await cursor.fetchall()
+
+            results.extend(rows)
+
+        return results
 
     async def build_pet_embed(self, row):
         pet_id = row[0]
@@ -214,6 +240,15 @@ class Pets(commands.GroupCog, name="pet"):
 
         else:
             rows = await self.fetch_pet(name)
+
+        if not rows:
+            filtered_rows = await self.fetch_pet_filter_list(items=self.bot.pet_list)
+            closest_rows = [(row, fuzz.token_set_ratio(name, row[-1]) + fuzz.ratio(name, row[-1])) for row in filtered_rows]
+            closest_rows = sorted(closest_rows, key=lambda x: x[1], reverse=True)
+            closest_rows = list(zip(*closest_rows))[0]
+            rows = await self.fetch_pet(name=closest_rows[0][-1])
+            if rows:
+                logger.info("Failed to find '{}' instead searching for {}", name, closest_rows[0][-1])
 
         if rows:
             embeds = [await self.build_pet_embed(row) for row in rows]

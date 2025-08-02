@@ -27,14 +27,16 @@ class Owner(commands.Cog):
         ctx,
         extension: str
     ):
+        extensions = extension.split(",")
         try:
-            await self.bot.reload_extension(f"bot.extensions.{extension}")
+            for this_extension in extensions:
+                await self.bot.reload_extension(f"bot.extensions.{this_extension}")
             await self.bot.tree.sync()
-            logger.info(f"Extension {extension} reloaded.")
-            await ctx.send(f"Extension {extension} reloaded.")
+            logger.info(f"Extension(s) {extension} reloaded.")
+            await ctx.send(f"Extension(s) {extension} reloaded.")
         except Exception as e:
-            logger.info(f"Failed to reload extension {extension}: {e}")
-            await ctx.send(f"Failed to reload extension {extension}: {e}")
+            logger.info(f"Failed to reload extension(s) {extension}: {e}")
+            await ctx.send(f"Failed to reload extension(s) {extension}: {e}")
 
     @commands.command(name="load")
     @commands.is_owner()

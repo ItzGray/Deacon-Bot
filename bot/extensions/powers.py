@@ -40,6 +40,12 @@ FIND_POWER_INFO_QUERY = """
 SELECT * FROM power_info WHERE power_info.power == ?
 """
 
+FIND_POWER_PLACEHOLDER_QUERY = """
+SELECT * FROM powers
+INNER JOIN locale_en ON locale_en.id == powers.name
+WHERE locale_en.data COLLATE NOCASE IN ({placeholders})
+"""
+
 class Powers(commands.GroupCog, name="power"):
     def __init__(self, bot: TheBot):
         self.bot = bot
@@ -64,6 +70,26 @@ class Powers(commands.GroupCog, name="power"):
     async def fetch_power_info(self, id: str) -> List[tuple]:
         async with self.bot.db.execute(FIND_POWER_INFO_QUERY, (id,)) as cursor:
             return await cursor.fetchall()
+        
+    async def fetch_power_filter_list(self, items) -> List[tuple]:
+        if isinstance(items, str):
+            items = [items]
+
+        results = []
+        for chunk in database.sql_chunked(items, 900):  # Stay under SQLite's limit
+            placeholders = database._make_placeholders(len(chunk))
+            query = FIND_POWER_PLACEHOLDER_QUERY.format(placeholders=placeholders)
+
+            args = (
+                *chunk,
+            )
+
+            async with self.bot.db.execute(query, args) as cursor:
+                rows = await cursor.fetchall()
+
+            results.extend(rows)
+
+        return results
         
     async def build_power_embed(self, row):
         power_id = row[0]
@@ -573,6 +599,15 @@ class Powers(commands.GroupCog, name="power"):
         
         else:
             rows = await self.fetch_power(name)
+
+        if not rows:
+            filtered_rows = await self.fetch_power_filter_list(items=self.bot.power_list)
+            closest_rows = [(row, fuzz.token_set_ratio(name, row[-1]) + fuzz.ratio(name, row[-1])) for row in filtered_rows]
+            closest_rows = sorted(closest_rows, key=lambda x: x[1], reverse=True)
+            closest_rows = list(zip(*closest_rows))[0]
+            rows = await self.fetch_power(name=closest_rows[0][-1])
+            if rows:
+                logger.info("Failed to find '{}' instead searching for {}", name, closest_rows[0][-1])
         
         if rows:
             embeds = [await self.build_power_embed(row) for row in rows]

@@ -9,6 +9,31 @@ from loguru import logger
 
 EXTENSIONS = Path(__file__).parent / "extensions"
 
+FIND_ITEM_NAME_QUERY = """
+SELECT locale_en.data FROM items
+INNER JOIN locale_en ON locale_en.id == items.name
+"""
+
+FIND_PET_NAME_QUERY = """
+SELECT locale_en.data FROM pets
+INNER JOIN locale_en ON locale_en.id == pets.name
+"""
+
+FIND_POWER_NAME_QUERY = """
+SELECT locale_en.data FROM powers
+INNER JOIN locale_en ON locale_en.id == powers.name
+"""
+
+FIND_TALENT_NAME_QUERY = """
+SELECT locale_en.data FROM talents
+INNER JOIN locale_en ON locale_en.id == talents.name
+"""
+
+FIND_UNIT_NAME_QUERY = """
+SELECT locale_en.data FROM units
+INNER JOIN locale_en ON locale_en.id == units.name
+"""
+
 class TheBot(commands.Bot):
     def __init__(self, db_path: Path, **kwargs):
         super().__init__(**kwargs)
@@ -16,6 +41,11 @@ class TheBot(commands.Bot):
         self.ready_once = False
         self.db_path = db_path
         self.db = None
+        self.item_list = []
+        self.pet_list = []
+        self.power_list = []
+        self.talent_list = []
+        self.unit_list = []
         self.uptime = datetime.now()
 
     async def on_ready(self):
@@ -28,6 +58,42 @@ class TheBot(commands.Bot):
         async with aiosqlite.connect(self.db_path) as db:
             self.db = await aiosqlite.connect(":memory:")
             await db.backup(self.db)
+
+        # Put lists of things into the bot.
+        async with self.db.execute(FIND_ITEM_NAME_QUERY) as cursor:
+            tuple_item_list = await cursor.fetchall()
+
+        for i in tuple_item_list:
+            if i[0] not in self.item_list:
+                self.item_list.append(i[0])
+
+        async with self.db.execute(FIND_PET_NAME_QUERY) as cursor:
+            tuple_pet_list = await cursor.fetchall()
+
+        for i in tuple_pet_list:
+            if i[0] not in self.pet_list:
+                self.pet_list.append(i[0])
+        
+        async with self.db.execute(FIND_POWER_NAME_QUERY) as cursor:
+            tuple_power_list = await cursor.fetchall()
+
+        for i in tuple_power_list:
+            if i[0] not in self.power_list:
+                self.power_list.append(i[0])
+        
+        async with self.db.execute(FIND_TALENT_NAME_QUERY) as cursor:
+            tuple_talent_list = await cursor.fetchall()
+
+        for i in tuple_talent_list:
+            if i[0] not in self.talent_list:
+                self.talent_list.append(i[0])
+        
+        async with self.db.execute(FIND_UNIT_NAME_QUERY) as cursor:
+            tuple_unit_list = await cursor.fetchall()
+
+        for i in tuple_unit_list:
+            if i[0] not in self.unit_list:
+                self.unit_list.append(i[0])
 
         # Load required bot extensions.
         await self.load_extension("jishaku")

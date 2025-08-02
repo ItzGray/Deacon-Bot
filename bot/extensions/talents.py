@@ -56,6 +56,14 @@ FIND_TALENT_STATS_QUERY = """
 SELECT * FROM talent_stats WHERE talent_stats.talent == ?
 """
 
+FIND_TALENTS_WITH_FILTER_PLACEHOLDER_QUERY = """
+SELECT * FROM talents
+INNER JOIN locale_en ON locale_en.id == talents.name
+WHERE locale_en.data COLLATE NOCASE IN ({placeholders})
+AND (? = -1 OR talents.ranks = ?)
+COLLATE NOCASE
+"""
+
 class Talents(commands.GroupCog, name="talent"):
     def __init__(self, bot: TheBot):
         self.bot = bot
@@ -88,6 +96,27 @@ class Talents(commands.GroupCog, name="talent"):
     async def fetch_talent_stats(self, id: str) -> List[tuple]:
         async with self.bot.db.execute(FIND_TALENT_STATS_QUERY, (id,)) as cursor:
             return await cursor.fetchall()
+        
+    async def fetch_talent_filter_list(self, items, ranks: int) -> List[tuple]:
+        if isinstance(items, str):
+            items = [items]
+
+        results = []
+        for chunk in database.sql_chunked(items, 900):  # Stay under SQLite's limit
+            placeholders = database._make_placeholders(len(chunk))
+            query = FIND_TALENTS_WITH_FILTER_PLACEHOLDER_QUERY.format(placeholders=placeholders)
+
+            args = (
+                *chunk,
+                ranks, ranks
+            )
+
+            async with self.bot.db.execute(query, args) as cursor:
+                rows = await cursor.fetchall()
+
+            results.extend(rows)
+
+        return results
     
     async def build_talent_embed(self, row):
         talent_id = row[0]
@@ -268,6 +297,17 @@ class Talents(commands.GroupCog, name="talent"):
                 rows = await self.fetch_talent_with_filter(name, ranks)
             else:
                 rows = await self.fetch_talent(name)
+            if not rows:
+                filtered_rows = await self.fetch_talent_filter_list(items=self.bot.talent_list, ranks=ranks)
+                closest_rows = [(row, fuzz.token_set_ratio(name, row[-1]) + fuzz.ratio(name, row[-1])) for row in filtered_rows]
+                closest_rows = sorted(closest_rows, key=lambda x: x[1], reverse=True)
+                closest_rows = list(zip(*closest_rows))[0]
+                if ranks != -1:
+                    rows = await self.fetch_talent_with_filter(name=closest_rows[0][-1], ranks=ranks)
+                else:
+                    rows = await self.fetch_talent(name=closest_rows[0][-1])
+                if rows:
+                    logger.info("Failed to find '{}' instead searching for {}", name, closest_rows[0][-1])
         
         if rows:
             embeds = [await self.build_talent_embed(row) for row in rows]
