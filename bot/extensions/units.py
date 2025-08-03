@@ -455,6 +455,9 @@ class Units(commands.GroupCog, name="unit"):
                     try:
                         increment_num = (curve_val2 - curve_val1) / (curve_lvl2 - curve_lvl1)
                         raw_num = (curve_val1 + (increment_num * (level - curve_lvl1)))
+                        lvl_num = round(1 / increment_num)
+                        if lvl_num < 1:
+                            lvl_num = 1
                     except:
                         pass
                 elif curve_types[stat + 1] == "Bonus":
@@ -467,8 +470,6 @@ class Units(commands.GroupCog, name="unit"):
             final_num = 0
             bonus_set = False
             no_operator = True
-            talent_gaps = [12, 32, 52, 72]
-            talent_subtract = 0
             for modifier in modifiers:
                 if modifier[2] != curr_stat:
                     continue
@@ -477,16 +478,25 @@ class Units(commands.GroupCog, name="unit"):
                 if bonus_set == True:
                     continue
                 if modifier[3] == "Multiply":
-                    final_num = raw_num * modifier[4]
-                    # Hacky fix for low talent companions
-                    if modifier[2] == "Talent Slots" and modifier[4] == 0.8:
-                        for talent in talent_gaps:
-                            if level >= talent:
-                                talent_subtract += 1
-                        final_num = raw_num - talent_subtract
+                    lvl_count = math.floor(curve_lvl1 % lvl_num)
+                    lvl_count -= 1
+                    final_num = curve_val1 * modifier[4]
+                    for level_inc in range(curve_lvl1, level + 1):
+                        lvl_count += 1
+                        if lvl_count >= lvl_num:
+                            lvl_count = 0
+                            final_num += ((increment_num * modifier[4]) * lvl_num)
                     no_operator = False
                 elif modifier[3] == "Multiply Add":
-                    final_num = raw_num + (raw_num * modifier[4])
+                    lvl_count = math.floor(curve_lvl1 % lvl_num)
+                    lvl_count -= 1
+                    final_num = curve_val1 + (curve_val1 * modifier[4])
+                    for level_inc in range(curve_lvl1, level + 1):
+                        lvl_count += 1
+                        if lvl_count >= lvl_num:
+                            lvl_count = 0
+                            final_num += ((increment_num + (increment_num * modifier[4])) * lvl_num)
+                        logger.info(f"Stat {curr_stat} at lvl. {level_inc}: {final_num}")
                     no_operator = False
                 elif modifier[3] == "Add" or modifier[3] == "Set Add":
                     if bonus_flag == True:
@@ -498,7 +508,12 @@ class Units(commands.GroupCog, name="unit"):
                     no_operator = False
             if no_operator == True:
                 final_num = raw_num
-            final_stats.append((curr_stat, math.floor(final_num)))
+            round_up_stats = ["Talent Slots", "Accuracy", "Dodge", "Armor"]
+            if curr_stat in round_up_stats:
+                final_num = round(final_num)
+            else:
+                final_num = math.floor(final_num)
+            final_stats.append((curr_stat, final_num))
             stat += curr_stat_count
 
         return final_stats
