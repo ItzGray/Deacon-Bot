@@ -496,7 +496,6 @@ class Units(commands.GroupCog, name="unit"):
                         if lvl_count >= lvl_num:
                             lvl_count = 0
                             final_num += ((increment_num + (increment_num * modifier[4])) * lvl_num)
-                        logger.info(f"Stat {curr_stat} at lvl. {level_inc}: {final_num}")
                     no_operator = False
                 elif modifier[3] == "Add" or modifier[3] == "Set Add":
                     if bonus_flag == True:
