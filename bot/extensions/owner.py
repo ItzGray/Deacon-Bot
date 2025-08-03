@@ -14,8 +14,10 @@ class Owner(commands.Cog):
     @commands.is_owner()
     async def sync(
         self,
-        ctx
+        ctx: commands.Context[TheBot],
     ):
+        if ctx.guild.id != int(self.bot.home_guild):
+            raise commands.errors.NotOwner("You are not the owner.")
         await self.bot.tree.sync()
         logger.info("Command tree synced.")
         await ctx.send("Command tree synced.")
@@ -24,9 +26,11 @@ class Owner(commands.Cog):
     @commands.is_owner()
     async def reload(
         self,
-        ctx,
+        ctx: commands.Context[TheBot],
         extension: str
     ):
+        if ctx.guild.id != int(self.bot.home_guild):
+            raise commands.errors.NotOwner("You are not the owner.")
         extensions = extension.split(",")
         try:
             for this_extension in extensions:
@@ -42,9 +46,11 @@ class Owner(commands.Cog):
     @commands.is_owner()
     async def load(
         self,
-        ctx,
+        ctx: commands.Context[TheBot],
         extension: str
     ):
+        if ctx.guild.id != int(self.bot.home_guild):
+            raise commands.errors.NotOwner("You are not the owner.")
         try:
             await self.bot.load_extension(f"bot.extensions.{extension}")
             await self.bot.tree.sync()
@@ -58,8 +64,10 @@ class Owner(commands.Cog):
     @commands.is_owner()
     async def reload_db(
         self,
-        ctx,
+        ctx: commands.Context[TheBot],
     ):
+        if ctx.guild.id != int(self.bot.home_guild):
+            raise commands.errors.NotOwner("You are not the owner.")
         async with aiosqlite.connect(self.bot.db_path) as db:
             self.bot.db = await aiosqlite.connect(":memory:")
             await db.backup(self.bot.db)

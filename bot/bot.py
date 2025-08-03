@@ -98,6 +98,7 @@ class TheBot(commands.Bot):
         # Load required bot extensions.
         await self.load_extension("jishaku")
         ext_count = await self.load_extensions_from_dir(EXTENSIONS)
+        self.home_guild = os.environ["HOME_GUILD_ID"]
 
         await self.tree.sync()
         # Log information about the user.
