@@ -385,7 +385,7 @@ async def get_ability_damage(db, ability: str):
             if row[4] == "Set" or row[4] == "Multiply Add":
                 final_text += f"+ x{row[6]}{get_stat_emoji(row[5])} "
     final_text = final_text[2:-1]
-    final_text = f"({final_text})"
+    final_text = f"[{final_text}]"
     return final_text, dmg_type
 
 def _make_placeholders(count: int) -> str:
