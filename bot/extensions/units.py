@@ -443,7 +443,9 @@ class Units(commands.GroupCog, name="unit"):
                 bonus_flag = False
                 if curve_types[stat + 1] == "Regular":
                     for stat_level in range(curr_stat_count):
-                        if curve_levels[stat + stat_level] > level and curve_lvl2 == 0:
+                        if level > curve_levels[-1]:
+                            level = curve_levels[-1]
+                        if curve_levels[stat + stat_level] >= level and curve_lvl2 == 0:
                             curve_lvl1 = curve_levels[stat + (stat_level - 1)]
                             curve_lvl2 = curve_levels[stat + stat_level]
                             curve_val1 = curve_values[stat + (stat_level - 1)]
