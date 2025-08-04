@@ -241,7 +241,7 @@ class Powers(commands.GroupCog, name="power"):
                             if operators[value] == "Set" or operators[value] == "Multiply Add":
                                 final_text += f"+ x{amounts[value]}{database.get_stat_emoji(dmg_stats[value])} "
                         final_text = final_text[2:-1]
-                        final_text = f"({final_text})"
+                        final_text = f"[{final_text}]"
                         if final_text == "()":
                             final_text = ""
                         power_desc = power_desc.replace(f"${desc_split}$", final_text)
@@ -284,7 +284,7 @@ class Powers(commands.GroupCog, name="power"):
                         if operators[value] == "Set" or operators[value] == "Multiply Add":
                             final_text += f"+ x{amounts[value]}{database.get_stat_emoji(dmg_stats[value])} "
                     final_text = final_text[2:-1]
-                    final_text = f"({final_text})"
+                    final_text = f"[{final_text}]"
                     if final_text == "()":
                         final_text = ""
                     power_desc = power_desc.replace(f"${desc_split}$", final_text)
@@ -317,9 +317,12 @@ class Powers(commands.GroupCog, name="power"):
                             amounts.append(power_mult_amounts[value])
                     final_text = ""
                     for value in range(len(amounts)):
-                        final_text += f"+ x{amounts[value]}{database.get_stat_emoji(heal_stats[value])} "
+                        if operators[value] != "Divide":
+                            final_text += f"+ x{amounts[value]}{database.get_stat_emoji(heal_stats[value])} "
+                        else:
+                            final_text += f"+ ({database.get_stat_emoji(f'{heal_stats[value]}1')} ÷ {database.get_stat_emoji(f'{amounts[value]}1')}) "
                     final_text = final_text[2:-1]
-                    final_text = f"({final_text})"
+                    final_text = f"[{final_text}]"
                     if final_text == "()":
                         final_text = ""
                     power_desc = power_desc.replace(f"${desc_split}$", final_text)

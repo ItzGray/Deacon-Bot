@@ -84,6 +84,8 @@ _STATS = [
     MAGICAL_DAMAGE,
     PRIMARY_STATS,
     SPEED,
+    f"Current {HEALTH}",
+    f"Max {HEALTH}",
 ]
 
 _STATS_STR = [
@@ -110,6 +112,8 @@ _STATS_STR = [
     "Magical Damage",
     "Primary Stat",
     "Speed",
+    "Current Health1",
+    "Max Health1"
 ]
 
 _WEAPON_TYPES = [
