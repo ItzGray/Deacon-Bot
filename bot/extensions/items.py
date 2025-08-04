@@ -434,9 +434,9 @@ class Items(commands.GroupCog, name="item"):
                 rows = await self.fetch_item_ability_list_with_filter(ability=closest_rows[0][-1], school=school, kind=kind, level=level)
             else:
                 rows = await self.fetch_item_ability_list(ability=closest_rows[0][-1])
-            name = closest_rows[0][-1]
             if rows:
                 logger.info("Failed to find '{}' instead searching for {}", name, closest_rows[0][-1])
+            name = closest_rows[0][-1]
         
         if rows:
             view = ItemView(await self.build_list_embed(rows, name, "Ability"))
