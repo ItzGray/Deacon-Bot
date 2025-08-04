@@ -430,6 +430,7 @@ class Units(commands.GroupCog, name="unit"):
             pass
         stat = 0
         while stat < len(curve_stats):
+            real_level = level
             curr_stat = curve_stats[stat]
             stat_index = stats.index(curr_stat)
             curr_stat_count = stat_counts[stat_index]
@@ -443,20 +444,25 @@ class Units(commands.GroupCog, name="unit"):
                 bonus_flag = False
                 if curve_types[stat + 1] == "Regular":
                     for stat_level in range(curr_stat_count):
-                        if level > curve_levels[-1]:
-                            level = curve_levels[-1]
-                        if curve_levels[stat + stat_level] >= level and curve_lvl2 == 0:
+                        if curve_levels[stat + stat_level] >= real_level and curve_lvl2 == 0:
                             curve_lvl1 = curve_levels[stat + (stat_level - 1)]
                             curve_lvl2 = curve_levels[stat + stat_level]
                             curve_val1 = curve_values[stat + (stat_level - 1)]
                             curve_val2 = curve_values[stat + stat_level]
                         elif stat_level == curr_stat_count - 1:
-                            raw_num = curve_values[stat + stat_level]
+                            try:
+                                curve_lvl1 = curve_levels[stat + (stat_level - 1)]
+                                curve_lvl2 = curve_levels[stat + stat_level]
+                                curve_val1 = curve_values[stat + (stat_level - 1)]
+                                curve_val2 = curve_values[stat + stat_level]
+                                real_level = curve_lvl2
+                            except:
+                                raw_num = curve_values[stat + stat_level]
                         else: 
                             continue
                     try:
                         increment_num = (curve_val2 - curve_val1) / (curve_lvl2 - curve_lvl1)
-                        raw_num = (curve_val1 + (increment_num * (level - curve_lvl1)))
+                        raw_num = (curve_val1 + (increment_num * (real_level - curve_lvl1)))
                         lvl_num = round(1 / increment_num)
                         if lvl_num < 1:
                             lvl_num = 1
@@ -483,7 +489,7 @@ class Units(commands.GroupCog, name="unit"):
                     lvl_count = math.floor(curve_lvl1 % lvl_num)
                     lvl_count -= 1
                     final_num = curve_val1 * modifier[4]
-                    for level_inc in range(curve_lvl1, level + 1):
+                    for level_inc in range(curve_lvl1, real_level + 1):
                         lvl_count += 1
                         if lvl_count >= lvl_num:
                             lvl_count = 0
@@ -493,7 +499,7 @@ class Units(commands.GroupCog, name="unit"):
                     lvl_count = math.floor(curve_lvl1 % lvl_num)
                     lvl_count -= 1
                     final_num = curve_val1 + (curve_val1 * modifier[4])
-                    for level_inc in range(curve_lvl1, level + 1):
+                    for level_inc in range(curve_lvl1, real_level + 1):
                         lvl_count += 1
                         if lvl_count >= lvl_num:
                             lvl_count = 0
