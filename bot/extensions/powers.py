@@ -359,7 +359,7 @@ class Powers(commands.GroupCog, name="power"):
                         if operators[value] == "Set" or operators[value] == "Multiply Add":
                             final_text += f"+ x{amounts[value]}{database.get_stat_emoji(dmg_stats[value])} "
                     final_text = final_text[2:-1]
-                    final_text = f"({final_text})"
+                    final_text = f"[{final_text}]"
                     if final_text == "()":
                         final_text = ""
                     power_desc = power_desc.replace(f"${desc_split}$", final_text)
