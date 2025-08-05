@@ -462,7 +462,9 @@ class Units(commands.GroupCog, name="unit"):
                             continue
                     try:
                         increment_num = (curve_val2 - curve_val1) / (curve_lvl2 - curve_lvl1)
-                        raw_num = (curve_val1 + (increment_num * (real_level - curve_lvl1)))
+                        raw_num = curve_val1
+                        for level_inc in range(curve_lvl1, real_level):
+                            raw_num += increment_num
                         lvl_num = round(1 / increment_num)
                         if lvl_num < 1:
                             lvl_num = 1
@@ -486,24 +488,20 @@ class Units(commands.GroupCog, name="unit"):
                 if bonus_set == True:
                     continue
                 if modifier[3] == "Multiply":
-                    lvl_count = math.floor(curve_lvl1 % lvl_num)
-                    lvl_count -= 1
-                    final_num = curve_val1 * modifier[4]
-                    for level_inc in range(curve_lvl1, real_level + 1):
-                        lvl_count += 1
-                        if lvl_count >= lvl_num:
-                            lvl_count = 0
-                            final_num += ((increment_num * modifier[4]) * lvl_num)
+                    if curr_stat == "Talent Slots":
+                        lvl_count = math.floor(curve_lvl1 % lvl_num)
+                        lvl_count -= 1
+                        final_num = curve_val1 * modifier[4]
+                        for level_inc in range(curve_lvl1, real_level + 1):
+                            lvl_count += 1
+                            if lvl_count >= lvl_num:
+                                lvl_count = 0
+                                final_num += ((increment_num * modifier[4]) * lvl_num)
+                    else:
+                        final_num = raw_num * modifier[4]
                     no_operator = False
                 elif modifier[3] == "Multiply Add":
-                    lvl_count = math.floor(curve_lvl1 % lvl_num)
-                    lvl_count -= 1
-                    final_num = curve_val1 + (curve_val1 * modifier[4])
-                    for level_inc in range(curve_lvl1, real_level + 1):
-                        lvl_count += 1
-                        if lvl_count >= lvl_num:
-                            lvl_count = 0
-                            final_num += ((increment_num + (increment_num * modifier[4])) * lvl_num)
+                    final_num = raw_num * (modifier[4] + 1)
                     no_operator = False
                 elif modifier[3] == "Add" or modifier[3] == "Set Add":
                     if bonus_flag == True:
@@ -515,8 +513,8 @@ class Units(commands.GroupCog, name="unit"):
                     no_operator = False
             if no_operator == True:
                 final_num = raw_num
-            round_up_stats = ["Talent Slots", "Accuracy", "Dodge", "Armor"]
-            if curr_stat in round_up_stats:
+            round_down_stats = ["Will", "Agility", "Strength"]
+            if curr_stat not in round_down_stats:
                 final_num = round(final_num)
             else:
                 final_num = math.floor(final_num)
@@ -576,7 +574,7 @@ class Units(commands.GroupCog, name="unit"):
 
         return embed, discord_file
     
-    @app_commands.command(name="calc", description="Calculates a unit's stats at a given level (WARNING: Slightly inaccurate)")
+    @app_commands.command(name="calc", description="Calculates a unit's stats at a given level")
     @app_commands.describe(name="The name of the unit to search for")
     async def calc(
         self,
