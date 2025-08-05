@@ -515,7 +515,8 @@ class Units(commands.GroupCog, name="unit"):
                     no_operator = False
             if no_operator == True:
                 final_num = raw_num
-            round_down_stats = ["Will", "Agility", "Strength", "Talent Slots"]
+            round_down_stats = ["Will", "Agility", "Strength", "Talent Slots", "Attack Range"]
+            final_num = round(final_num, 2)
             if curr_stat not in round_down_stats:
                 final_num = round(final_num)
             else:
