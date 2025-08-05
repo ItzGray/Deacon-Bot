@@ -241,14 +241,14 @@ class Pets(commands.GroupCog, name="pet"):
         else:
             rows = await self.fetch_pet(name)
 
-        if not rows:
-            filtered_rows = await self.fetch_pet_filter_list(items=self.bot.pet_list)
-            closest_rows = [(row, fuzz.token_set_ratio(name, row[-1]) + fuzz.ratio(name, row[-1])) for row in filtered_rows]
-            closest_rows = sorted(closest_rows, key=lambda x: x[1], reverse=True)
-            closest_rows = list(zip(*closest_rows))[0]
-            rows = await self.fetch_pet(name=closest_rows[0][-1])
-            if rows:
-                logger.info("Failed to find '{}' instead searching for {}", name, closest_rows[0][-1])
+            if not rows:
+                filtered_rows = await self.fetch_pet_filter_list(items=self.bot.pet_list)
+                closest_rows = [(row, fuzz.token_set_ratio(name, row[-1]) + fuzz.ratio(name, row[-1])) for row in filtered_rows]
+                closest_rows = sorted(closest_rows, key=lambda x: x[1], reverse=True)
+                closest_rows = list(zip(*closest_rows))[0]
+                rows = await self.fetch_pet(name=closest_rows[0][-1])
+                if rows:
+                    logger.info("Failed to find '{}' instead searching for {}", name, closest_rows[0][-1])
 
         if rows:
             embeds = [await self.build_pet_embed(row) for row in rows]

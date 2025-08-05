@@ -201,6 +201,33 @@ PVP_TAG = {
     2: "PvP Only",
 }
 
+AREA_EMOJIS = {
+    "Ally Radial": ALLY_3X3,
+    "All Radial": ALL_3X3,
+    "Enemy Radial": ENEMY_3X3,
+    "Ally Single Target": ALLY_SINGLE,
+    "All Single Target": ALL_SINGLE,
+    "Enemy Single Target": ENEMY_SINGLE,
+    "Ally Ordinal": ALLY_ORDINAL,
+    "All Ordinal": ALL_ORDINAL,
+    "Enemy Ordinal": ENEMY_ORDINAL,
+    "Ally Wall": ALLY_WALL,
+    "All Wall": ALL_WALL,
+    "Enemy Wall": ENEMY_WALL,
+    "Ally Cardinal": ALLY_CARDINAL,
+    "All Cardinal": ALL_CARDINAL,
+    "Enemy Cardinal": ENEMY_CARDINAL,
+    "Ally Cone": ALLY_CONE,
+    "All Cone": ALL_CONE,
+    "Enemy Cone": ENEMY_CONE,
+    "Ally Line": ALLY_LINE,
+    "All Line": ALL_LINE,
+    "Enemy Line": ENEMY_LINE,
+    "Ally Full Team": f"{ALLY_3X3} Team",
+    "All Full Team": f"{ALL_3X3} Team",
+    "Enemy Full Team": f"{ENEMY_3X3} Team"
+}
+
 class StatFlags(IntFlag):
     Strength = 1 << 0
     Agility = 1 << 1
@@ -212,6 +239,11 @@ class ItemFlags(IntFlag):
     NoTrash = 1 << 2
     NoAuction = 1 << 3
     NoStitch = 1 << 4
+
+class TargetTypes(IntFlag):
+    Ally = 1 << 0
+    Enemy = 1 << 1
+    All = 1 << 2
 
 def translate_flags(flag: int) -> List[str]:
     flags = []
@@ -238,6 +270,19 @@ def translate_stat_flags(flag: int) -> List[str]:
         flags.append("Will")
 
     return flags
+
+def translate_target_types(target: int) -> str:
+    if target == 0:
+        return "All"
+    if target == 3:
+        return "All"
+    if target & TargetTypes.Enemy:
+        return "Enemy"
+    if target & TargetTypes.Ally:
+        return "Ally"
+    if target & TargetTypes.All:
+        return "All"
+    return "Unknown"
 
 def _fnv_1a(data: bytes) -> int:
     if isinstance(data, str):

@@ -220,7 +220,7 @@ class Powers(commands.GroupCog, name="power"):
                         if operators[value] == "Set" or operators[value] == "Multiply Add":
                             final_text += f"+ x{amounts[value]}{database.get_stat_emoji(stats[value])} "
                     final_text = final_text[2:-1]
-                    final_text = f"({final_text})"
+                    final_text = f"[{final_text}]"
                     power_desc = power_desc.replace(f"${desc_split}$", final_text)
                 if "eDamage" in desc_split:
                     try:
@@ -242,7 +242,7 @@ class Powers(commands.GroupCog, name="power"):
                                 final_text += f"+ x{amounts[value]}{database.get_stat_emoji(dmg_stats[value])} "
                         final_text = final_text[2:-1]
                         final_text = f"[{final_text}]"
-                        if final_text == "()":
+                        if final_text == "[]":
                             final_text = ""
                         power_desc = power_desc.replace(f"${desc_split}$", final_text)
                         count = 0
@@ -285,7 +285,7 @@ class Powers(commands.GroupCog, name="power"):
                             final_text += f"+ x{amounts[value]}{database.get_stat_emoji(dmg_stats[value])} "
                     final_text = final_text[2:-1]
                     final_text = f"[{final_text}]"
-                    if final_text == "()":
+                    if final_text == "[]":
                         final_text = ""
                     power_desc = power_desc.replace(f"${desc_split}$", final_text)
                 if "eEffectIcon" in desc_split:
@@ -323,7 +323,7 @@ class Powers(commands.GroupCog, name="power"):
                             final_text += f"+ ({database.get_stat_emoji(f'{heal_stats[value]}1')} ÷ {database.get_stat_emoji(f'{amounts[value]}1')}) "
                     final_text = final_text[2:-1]
                     final_text = f"[{final_text}]"
-                    if final_text == "()":
+                    if final_text == "[]":
                         final_text = ""
                     power_desc = power_desc.replace(f"${desc_split}$", final_text)
                 if "eBonus" in desc_split:
@@ -360,7 +360,7 @@ class Powers(commands.GroupCog, name="power"):
                             final_text += f"+ x{amounts[value]}{database.get_stat_emoji(dmg_stats[value])} "
                     final_text = final_text[2:-1]
                     final_text = f"[{final_text}]"
-                    if final_text == "()":
+                    if final_text == "[]":
                         final_text = ""
                     power_desc = power_desc.replace(f"${desc_split}$", final_text)
                 if "eTargetStatIcon" in desc_split:
@@ -555,6 +555,8 @@ class Powers(commands.GroupCog, name="power"):
             power_desc = re.sub(r'<font color="(.*?)">', '', power_desc)
 
         pvp_tag = row[5]
+        target_type = row[6]
+        target_area = row[7]
 
         embed = (
             discord.Embed(
@@ -562,8 +564,12 @@ class Powers(commands.GroupCog, name="power"):
             )
             .set_author(name=f"{power_name}\n({real_name}: {power_id})")
             .add_field(name="Description", value=power_desc, inline=False)
-            .add_field(name="\u200b", value=f"**{database.PVP_TAG[pvp_tag]}**", inline=False)
+            .add_field(name="PvP Status", value=f"{database.PVP_TAG[pvp_tag]}", inline=True)
         )
+        try:
+            embed.add_field(name="Area", value=f"{database.AREA_EMOJIS[f'{database.translate_target_types(target_type)} {target_area}']}", inline=True)
+        except:
+            pass
 
         discord_file = None
         if power_image:
@@ -603,14 +609,14 @@ class Powers(commands.GroupCog, name="power"):
         else:
             rows = await self.fetch_power(name)
 
-        if not rows:
-            filtered_rows = await self.fetch_power_filter_list(items=self.bot.power_list)
-            closest_rows = [(row, fuzz.token_set_ratio(name, row[-1]) + fuzz.ratio(name, row[-1])) for row in filtered_rows]
-            closest_rows = sorted(closest_rows, key=lambda x: x[1], reverse=True)
-            closest_rows = list(zip(*closest_rows))[0]
-            rows = await self.fetch_power(name=closest_rows[0][-1])
-            if rows:
-                logger.info("Failed to find '{}' instead searching for {}", name, closest_rows[0][-1])
+            if not rows:
+                filtered_rows = await self.fetch_power_filter_list(items=self.bot.power_list)
+                closest_rows = [(row, fuzz.token_set_ratio(name, row[-1]) + fuzz.ratio(name, row[-1])) for row in filtered_rows]
+                closest_rows = sorted(closest_rows, key=lambda x: x[1], reverse=True)
+                closest_rows = list(zip(*closest_rows))[0]
+                rows = await self.fetch_power(name=closest_rows[0][-1])
+                if rows:
+                    logger.info("Failed to find '{}' instead searching for {}", name, closest_rows[0][-1])
         
         if rows:
             embeds = [await self.build_power_embed(row) for row in rows]
