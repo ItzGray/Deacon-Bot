@@ -445,11 +445,13 @@ class Units(commands.GroupCog, name="unit"):
                 if curve_types[stat + 1] == "Regular":
                     for stat_level in range(curr_stat_count):
                         if curve_levels[stat + stat_level] >= real_level and curve_lvl2 == 0:
+                            if real_level == 1 and stat_level == 0:
+                                continue
                             curve_lvl1 = curve_levels[stat + (stat_level - 1)]
                             curve_lvl2 = curve_levels[stat + stat_level]
                             curve_val1 = curve_values[stat + (stat_level - 1)]
                             curve_val2 = curve_values[stat + stat_level]
-                        elif stat_level == curr_stat_count - 1:
+                        elif stat_level == curr_stat_count - 1 and curve_lvl2 == 0:
                             try:
                                 curve_lvl1 = curve_levels[stat + (stat_level - 1)]
                                 curve_lvl2 = curve_levels[stat + stat_level]
@@ -488,7 +490,7 @@ class Units(commands.GroupCog, name="unit"):
                 if bonus_set == True:
                     continue
                 if modifier[3] == "Multiply":
-                    if curr_stat == "Talent Slots":
+                    if curr_stat == "Talent Slots" and real_level >= 4:
                         lvl_count = math.floor(curve_lvl1 % lvl_num)
                         lvl_count -= 1
                         final_num = curve_val1 * modifier[4]
