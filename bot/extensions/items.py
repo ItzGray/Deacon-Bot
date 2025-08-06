@@ -24,7 +24,6 @@ WHERE locale_en.data == ? COLLATE NOCASE
 
 FIND_OBJECT_NAME_QUERY = """
 SELECT * FROM items
-INNER JOIN locale_en ON locale_en.id == items.name
 WHERE items.real_name == ? COLLATE NOCASE
 """
 
