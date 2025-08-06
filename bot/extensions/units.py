@@ -134,6 +134,7 @@ class Units(commands.GroupCog, name="unit"):
         unit_school = row[5]
         unit_dmg_type = row[6]
         unit_primary_stat = database.translate_stat_flags(int(row[7]))
+        unit_primary_attack, unit_primary_attack_obj = await database.translate_power_name(self.bot.db, int(row[10]))
 
         unit_stats = await self.fetch_unit_stats(unit_id)
         unit_talents = await self.fetch_unit_talents(unit_id)
@@ -186,6 +187,8 @@ class Units(commands.GroupCog, name="unit"):
             title_string += "\n" + unit_title
 
         desc_string = ""
+        if unit_primary_attack != "":
+            desc_string += f"Primary Attack - {unit_primary_attack} ({unit_primary_attack_obj})\n"
         desc_string += "Does " + unit_dmg_type + f" {database.get_stat_emoji(unit_dmg_type)}\n"
         desc_string += "Boosts from "
         for flag in range(len(unit_primary_stat)):
