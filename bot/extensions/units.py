@@ -140,12 +140,16 @@ class Units(commands.GroupCog, name="unit"):
 
         stat_string = ""
         for stat in unit_stats:
+            if stat[2] == "Armor Penetration":
+                real_stat = f"{stat[4] * 100}%"
+            else:
+                real_stat = stat[4]
             if stat[3] == "Set":
-                stat_string += f"{stat[4]} {stat[2]} {database.get_stat_emoji(stat[2])}\n"
+                stat_string += f"{real_stat} {stat[2]} {database.get_stat_emoji(stat[2])}\n"
             elif stat[3] == "Multiply":
-                stat_string += f"x{stat[4]} {stat[2]} {database.get_stat_emoji(stat[2])}\n"
+                stat_string += f"x{real_stat} {stat[2]} {database.get_stat_emoji(stat[2])}\n"
             elif stat[3] == "Multiply Add":
-                stat_string += f"x{round(stat[4] + 1, 2)} {stat[2]} {database.get_stat_emoji(stat[2])}\n"
+                stat_string += f"x{round(real_stat + 1, 2)} {stat[2]} {database.get_stat_emoji(stat[2])}\n"
             elif stat[3] == "Add" or stat[3] == "Set Add":
                 if stat[4] < 0:
                     disp_operator = ""
@@ -431,6 +435,7 @@ class Units(commands.GroupCog, name="unit"):
         except: 
             pass
         stat = 0
+        stats_not_in_curve = []
         while stat < len(curve_stats):
             real_level = level
             curr_stat = curve_stats[stat]
@@ -486,8 +491,20 @@ class Units(commands.GroupCog, name="unit"):
             no_operator = True
             for modifier in modifiers:
                 if modifier[2] != curr_stat:
+                    if modifier[2] in curve_stats or modifier[2] in stats_not_in_curve:
+                        pass
+                    else:
+                        if modifier[3] != "Multiply" and modifier[3] != "Multiply Add":
+                            if modifier[2] == "Armor Penetration":
+                                modifier_real = f"{modifier[4] * 100}%"
+                            else:
+                                modifier_real = modifier[4]
+                            final_stats.append((modifier[2], modifier_real))
+                            stats_not_in_curve.append(modifier[2])
+                        else:
+                            pass
                     continue
-                if raw_num == 0:
+                if raw_num == 0 and (modifier[3] == "Multiply" or modifier[3] == "Multiply Add"):
                     continue
                 if bonus_set == True:
                     continue
