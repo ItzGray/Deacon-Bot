@@ -218,7 +218,7 @@ class Items(commands.GroupCog, name="item"):
                     stat_string += "\n"
                     
         for stat in item_stats:
-            if stat[4] < 1:
+            if stat[4] < 1 or stat[3] == "Speed":
                 stat_rounded = round(stat[4], 2)
                 stat_rounded_int = int(stat_rounded * 100)
                 stat_string += "+" + str(stat_rounded_int) + "%"
