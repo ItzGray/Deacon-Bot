@@ -11,6 +11,7 @@ from .emojis import *
 
 _SCHOOL_COLORS = [
     discord.Color.greyple(), # Universal
+    discord.Color.greyple(), # Universal
     discord.Color.red(), # Buccaneer
     discord.Color.yellow(), # Privateer
     discord.Color.green(), # Witchdoctor
@@ -19,6 +20,7 @@ _SCHOOL_COLORS = [
 ]
 
 _SCHOOLS = [
+    UNIVERSAL,
     UNIVERSAL,
     BUCCANEER,
     PRIVATEER,
@@ -53,6 +55,7 @@ _ITEMS_STR = [
 
 _SCHOOLS_STR = [
     None, # Universal
+    "Any", # Universal
     "Buccaneer",
     "Privateer",
     "Witchdoctor",

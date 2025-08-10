@@ -237,7 +237,7 @@ class Items(commands.GroupCog, name="item"):
             stat_string += "+1 copy of " + power_name + " (" + object_name + ")\n"
 
         requirement_string = ""
-        if item_reqs[0]:
+        if item_reqs[0] != "Any":
             requirement_string += f"{database.get_school_emoji(item_reqs[0])} only\n"
         if item_reqs[1] > 1:
             requirement_string += "Level " + str(item_reqs[1]) + "+ only\n"
@@ -303,8 +303,6 @@ class Items(commands.GroupCog, name="item"):
         
         else:
             if school != "All" or kind != "Any" or level != -1:
-                if school == "Any":
-                    school = ""
                 rows = await self.fetch_item_with_filter(name, school, kind, level)
             else:
                 rows = await self.fetch_item(name)
@@ -380,8 +378,6 @@ class Items(commands.GroupCog, name="item"):
             logger.info("{} requested item list for '{}' in channel #{} of {}", interaction.user.name, name, interaction.channel.name, interaction.guild.name)
         
         if school != "All" or kind != "Any" or level != -1:
-            if school == "Any":
-                school = ""
             rows = await self.fetch_item_list_with_filter(name, school, kind, level)
         else:
             rows = await self.fetch_item_list(name)
@@ -416,8 +412,6 @@ class Items(commands.GroupCog, name="item"):
             logger.info("{} requested item list for ability '{}' in channel #{} of {}", interaction.user.name, name, interaction.channel.name, interaction.guild.name)
         
         if school != "All" or kind != "Any" or level != -1:
-            if school == "Any":
-                school = ""
             rows = await self.fetch_item_ability_list_with_filter(name, school, kind, level)
         else:
             rows = await self.fetch_item_ability_list(name)
