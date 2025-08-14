@@ -335,16 +335,29 @@ class Items(commands.GroupCog, name="item"):
     async def build_list_embed(self, rows: List[tuple], name: str, list_type: str):
         desc_strings = []
         desc_index = 0
+        counts = {}
+        obj_names_done = []
         desc_strings.append("")
         for row in rows:
             real_name = row[2].decode("utf-8")
             item_name = await database.translate_name(self.bot.db, row[1])
             item_type = row[4]
             item_class = row[6]
+            if real_name in obj_names_done:
+                continue
+            else:
+                obj_names_done.append(real_name)
+            counts.update({item_name: 0})
+            for new_row in rows:
+                if new_row[1] == row[1] and new_row[4] == row[4] and new_row[6] == row[6] and (counts[item_name] == 0 or new_row[2] != row[2]):
+                    counts[item_name] += 1
             if len(desc_strings[desc_index]) >= 2500:
                 desc_index += 1
                 desc_strings.append("")
-            desc_strings[desc_index] += f"{database.get_school_emoji(item_class)}{database.get_item_emoji(item_type)} {item_name} ({real_name})\n"
+            if counts[item_name] == 1:
+                desc_strings[desc_index] += f"{database.get_school_emoji(item_class)}{database.get_item_emoji(item_type)} {item_name} ({real_name})\n"
+            elif counts[item_name] > 1 and f"{database.get_school_emoji(item_class)}{database.get_item_emoji(item_type)} {item_name}" not in desc_strings[desc_index]:
+                desc_strings[desc_index] += f"{database.get_school_emoji(item_class)}{database.get_item_emoji(item_type)} {item_name} *({counts[item_name]} tiers)*\n"
 
         if list_type == "List":
             author = f"Searching for: {name}"
