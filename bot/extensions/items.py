@@ -354,10 +354,10 @@ class Items(commands.GroupCog, name="item"):
             if len(desc_strings[desc_index]) >= 2500:
                 desc_index += 1
                 desc_strings.append("")
-            if counts[item_name] == 1:
+            if counts[item_name] == 1 and f"{database.get_school_emoji(item_class)}{database.get_item_emoji(item_type)} {item_name}" not in desc_strings[desc_index]:
                 desc_strings[desc_index] += f"{database.get_school_emoji(item_class)}{database.get_item_emoji(item_type)} {item_name} ({real_name})\n"
             elif counts[item_name] > 1 and f"{database.get_school_emoji(item_class)}{database.get_item_emoji(item_type)} {item_name}" not in desc_strings[desc_index]:
-                desc_strings[desc_index] += f"{database.get_school_emoji(item_class)}{database.get_item_emoji(item_type)} {item_name} *({counts[item_name]} tiers)*\n"
+                desc_strings[desc_index] += f"{database.get_school_emoji(item_class)}{database.get_item_emoji(item_type)} {item_name} *({counts[item_name]} versions)*\n"
 
         if list_type == "List":
             author = f"Searching for: {name}"
