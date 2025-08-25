@@ -11,7 +11,7 @@ To create the database the bot uses go to https://github.com/ItzGray/piratedb an
 
 If you want images for the bot, copy Root.wad, _Shared-WorldData.wad, Mob-WorldData.wad, Player-WorldData.wad, and the type file you just dumped (as types.json) into the root directory of the bot.
 
-Afterwards, run `py MoveImagesToBot.py` to move and convert all necessary images into the PNG_Images folder. (Note: Running the script requires ImageMagick)
+Afterwards, run `py MoveImagesToBot.py` to move and convert all necessary images into the PNG_Images folder. (Note: Running the script requires an ImageMagick installation. )
 
 Finally, edit the .env file to have the token of your discord bot.
 

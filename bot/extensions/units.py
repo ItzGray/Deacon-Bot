@@ -67,6 +67,12 @@ AND (? = 'Any' OR units.kind = ?)
 COLLATE NOCASE
 """
 
+FIND_CURVE_POWERS_QUERY = """
+SELECT * FROM curve_abilities
+WHERE curve_abilities.curve == ?
+AND curve_abilities.ability_type == 'Power'
+"""
+
 class Units(commands.GroupCog, name="unit"):
     def __init__(self, bot: TheBot):
         self.bot = bot
@@ -121,6 +127,18 @@ class Units(commands.GroupCog, name="unit"):
             results.extend(rows)
 
         return results
+    
+    async def fetch_curve_powers(self, curve_id: int) -> str:
+        power_list = ""
+        async with self.bot.db.execute(FIND_CURVE_POWERS_QUERY, (curve_id,)) as cursor:
+            rows = await cursor.fetchall()
+            for row in rows:
+                power_name, object_name = await database.translate_power_name(self.bot.db, row[2])
+                if object_name == "":
+                    logger.info(f"Curve Power ID {row[2]} unnamed")
+                    continue
+                power_list += f"{power_name} ({object_name})\n"
+        return power_list
         
     async def build_unit_embed(self, row):
         unit_id = row[0]
@@ -182,6 +200,8 @@ class Units(commands.GroupCog, name="unit"):
             trained_talent_string += "Witch Hunter 2\n"
         if row[8] == 656667 and "Alert" not in starting_talent_string:
             starting_talent_string += "Alert 1\n"
+        if row[11]:
+            starting_power_string += await self.fetch_curve_powers(row[8])
         
         title_string = ""
         if unit_name == unit_title or unit_title == "":
