@@ -73,6 +73,10 @@ WHERE curve_abilities.curve == ?
 AND curve_abilities.ability_type == 'Power'
 """
 
+FIND_FACTION_QUERY = """
+SELECT * FROM factions WHERE factions.id == ?
+"""
+
 class Units(commands.GroupCog, name="unit"):
     def __init__(self, bot: TheBot):
         self.bot = bot
@@ -139,6 +143,14 @@ class Units(commands.GroupCog, name="unit"):
                     continue
                 power_list += f"{power_name} ({object_name})\n"
         return power_list
+    
+    async def get_faction_name(self, faction_id: str):
+        async with self.bot.db.execute(FIND_FACTION_QUERY, (faction_id,)) as cursor:
+            rows = await cursor.fetchall()
+            for row in rows:
+                faction_name = row[1].decode("utf-8")
+                gendered = row[2]
+                return faction_name, gendered
         
     async def build_unit_embed(self, row):
         unit_id = row[0]
@@ -148,10 +160,12 @@ class Units(commands.GroupCog, name="unit"):
         unit_title = await database.translate_name(self.bot.db, row[4])
         unit_image = row[3].decode("utf-8")
 
-        unit_school = row[5]
-        unit_dmg_type = row[6]
-        unit_primary_stat = database.translate_stat_flags(int(row[7]))
-        unit_primary_attack, unit_primary_attack_obj = await database.translate_power_name(self.bot.db, int(row[10]))
+        unit_gender = row[5]
+        unit_faction = row[6]
+        unit_school = row[7]
+        unit_dmg_type = row[8]
+        unit_primary_stat = database.translate_stat_flags(int(row[9]))
+        unit_primary_attack, unit_primary_attack_obj = await database.translate_power_name(self.bot.db, int(row[12]))
 
         unit_stats = await self.fetch_unit_stats(unit_id)
         unit_talents = await self.fetch_unit_talents(unit_id)
@@ -196,11 +210,11 @@ class Units(commands.GroupCog, name="unit"):
                     starting_power_string += power_name + " " + " (" + object_name + ")\n"
                 elif talent[5] == "Trained":
                     trained_power_string += power_name + " " + " (" + object_name + ")\n"
-        if row[8] == 656670 and "Witch Hunter" not in trained_talent_string:
+        if row[10] == 656670 and "Witch Hunter" not in trained_talent_string:
             trained_talent_string += "Witch Hunter 2\n"
-        if row[8] == 656667 and "Alert" not in starting_talent_string:
+        if row[10] == 656667 and "Alert" not in starting_talent_string:
             starting_talent_string += "Alert 1\n"
-        if row[11]:
+        if row[13]:
             starting_power_string += await self.fetch_curve_powers(row[8])
         
         title_string = ""
@@ -212,6 +226,12 @@ class Units(commands.GroupCog, name="unit"):
         desc_string = ""
         if unit_primary_attack != "":
             desc_string += f"Primary Attack - {unit_primary_attack} ({unit_primary_attack_obj})\n"
+        if unit_faction != 0:
+            faction_name, gendered = await self.get_faction_name(unit_faction)
+            if not gendered:
+                desc_string += f"Faction - {faction_name}\n"
+            else:
+                desc_string += f"Faction - {faction_name} ({unit_gender})\n"
         desc_string += "Does " + unit_dmg_type + f" {database.get_stat_emoji(unit_dmg_type)}\n"
         desc_string += "Boosts from "
         for flag in range(len(unit_primary_stat)):
