@@ -404,7 +404,7 @@ class Units(commands.GroupCog, name="unit"):
             unit_title += await database.translate_name(self.bot.db, row[4])
             if f" - {unit_name}" == unit_title or unit_title == " - ":
                 unit_title = ""
-            unit_school = row[5]
+            unit_school = row[7]
             if len(desc_strings[desc_index]) >= 1500:
                 desc_index += 1
                 desc_strings.append("")
@@ -602,8 +602,8 @@ class Units(commands.GroupCog, name="unit"):
         else:
             title_string += "\n" + unit_title
 
-        unit_school = row[5]
-        unit_curve = row[8]
+        unit_school = row[7]
+        unit_curve = row[10]
 
         unit_modifiers = await self.fetch_unit_stats(unit_id)
 
