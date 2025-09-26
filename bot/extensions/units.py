@@ -214,8 +214,8 @@ class Units(commands.GroupCog, name="unit"):
             trained_talent_string += "Witch Hunter 2\n"
         if row[10] == 656667 and "Alert" not in starting_talent_string:
             starting_talent_string += "Alert 1\n"
-        if row[13]:
-            starting_power_string += await self.fetch_curve_powers(row[8])
+        if row[15]:
+            starting_power_string += await self.fetch_curve_powers(row[10])
         
         title_string = ""
         if unit_name == unit_title or unit_title == "":
