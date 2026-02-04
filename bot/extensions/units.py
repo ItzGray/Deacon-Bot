@@ -151,6 +151,7 @@ class Units(commands.GroupCog, name="unit"):
                 faction_name = row[1].decode("utf-8")
                 gendered = row[2]
                 return faction_name, gendered
+
         
     async def build_unit_embed(self, row):
         unit_id = row[0]
@@ -227,11 +228,14 @@ class Units(commands.GroupCog, name="unit"):
         if unit_primary_attack != "":
             desc_string += f"Primary Attack - {unit_primary_attack} ({unit_primary_attack_obj})\n"
         if unit_faction != 0:
-            faction_name, gendered = await self.get_faction_name(unit_faction)
-            if not gendered:
-                desc_string += f"Faction - {faction_name}\n"
-            else:
-                desc_string += f"Faction - {faction_name} ({unit_gender})\n"
+            try:
+                faction_name, gendered = await self.get_faction_name(unit_faction)
+                if not gendered:
+                    desc_string += f"Faction - {faction_name}\n"
+                else:
+                    desc_string += f"Faction - {faction_name} ({unit_gender})\n"
+            except:
+                pass
         desc_string += "Does " + unit_dmg_type + f" {database.get_stat_emoji(unit_dmg_type)}\n"
         desc_string += "Boosts from "
         for flag in range(len(unit_primary_stat)):
