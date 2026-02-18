@@ -103,8 +103,11 @@ async def move_images_to_bot():
                     try:
                         image = draw_behavior["m_icons"][0].decode("utf-8")
                     except:
-                        print("No icons!")
-                        continue
+                        try:
+                            image = row[3]
+                        except:
+                            print("No image path!")
+                            continue
                     image_split = image.split("/")[-1]
                     try:
                         image_split = image_split.split("?")[0]
@@ -123,7 +126,7 @@ async def move_images_to_bot():
                         try:
                             data = root[path]
                         except:
-                            print("No path!")
+                            print("No image path!")
                             continue
                     if image_split.split(".")[-1] == "tex":
                         deserialized_data = de.deserialize(data[4:])
