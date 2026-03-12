@@ -13,7 +13,6 @@ class BinDeserializer:
         opts.flags = 1
         opts.shallow = False
         opts.skip_unknown_types = True
-        opts.djb2_only = True
         
         self.types = TypeList.open(types_path)
 
@@ -47,7 +46,7 @@ async def move_images_to_bot():
         async for row in cursor:
             if row[2] == "":
                 continue
-            print(f"Processing: {row[2]}")
+            print(f"Processing: {row[2].split('?')[0]}")
             full_path = row[2]
             if full_path.startswith("|_Shared|WorldData|"):
                 wad = shared_worlddata
