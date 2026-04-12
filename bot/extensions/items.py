@@ -123,11 +123,11 @@ class Items(commands.GroupCog, name="item"):
             return await cursor.fetchall()
     
     async def fetch_item_list(self, name: str) -> List[tuple]:
-        async with self.bot.db.execute(FIND_ITEM_CONTAIN_STRING_QUERY, (name,)) as cursor:
+        async with self.bot.db.execute(FIND_ITEM_CONTAIN_STRING_QUERY, (name.lower(),)) as cursor:
             return await cursor.fetchall()
     
     async def fetch_item_list_with_filter(self, name: str, school: str, kind: str, level: int):
-        async with self.bot.db.execute(FIND_ITEMS_CONTAIN_STRING_WITH_FILTER_QUERY, (name,school,school,kind,kind,level,level)) as cursor:
+        async with self.bot.db.execute(FIND_ITEMS_CONTAIN_STRING_WITH_FILTER_QUERY, (name.lower(),school,school,kind,kind,level,level)) as cursor:
             return await cursor.fetchall()
     
     async def fetch_item_stats(self, id: str) -> List[tuple]:

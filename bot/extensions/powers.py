@@ -59,7 +59,7 @@ class Powers(commands.GroupCog, name="power"):
             return await cursor.fetchall()
         
     async def fetch_power_list(self, name: str) -> List[tuple]:
-        async with self.bot.db.execute(FIND_POWER_CONTAIN_STRING_QUERY, (name,)) as cursor:
+        async with self.bot.db.execute(FIND_POWER_CONTAIN_STRING_QUERY, (name.lower(),)) as cursor:
             return await cursor.fetchall()
         
     async def fetch_power_adjustments(self, id: str) -> List[tuple]:

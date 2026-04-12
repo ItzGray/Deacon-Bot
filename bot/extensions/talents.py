@@ -81,11 +81,11 @@ class Talents(commands.GroupCog, name="talent"):
             return await cursor.fetchall()
         
     async def fetch_talent_list(self, name: str) -> List[tuple]:
-        async with self.bot.db.execute(FIND_TALENT_CONTAIN_STRING_QUERY, (name,)) as cursor:
+        async with self.bot.db.execute(FIND_TALENT_CONTAIN_STRING_QUERY, (name.lower(),)) as cursor:
             return await cursor.fetchall()
     
     async def fetch_talent_list_with_filter(self, name: str, ranks: int) -> List[tuple]:
-        async with self.bot.db.execute(FIND_TALENT_CONTAIN_STRING_WITH_FILTER_QUERY, (name,ranks,ranks)) as cursor:
+        async with self.bot.db.execute(FIND_TALENT_CONTAIN_STRING_WITH_FILTER_QUERY, (name.lower(),ranks,ranks)) as cursor:
             return await cursor.fetchall()
         
     async def fetch_talent_ranks(self, id: str) -> List[tuple]:

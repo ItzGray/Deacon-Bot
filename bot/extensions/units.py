@@ -95,11 +95,11 @@ class Units(commands.GroupCog, name="unit"):
             return await cursor.fetchall()
         
     async def fetch_unit_list(self, name: str) -> List[tuple]:
-        async with self.bot.db.execute(FIND_UNIT_CONTAIN_STRING_QUERY, (name,)) as cursor:
+        async with self.bot.db.execute(FIND_UNIT_CONTAIN_STRING_QUERY, (name.lower(),)) as cursor:
             return await cursor.fetchall()
     
     async def fetch_unit_list_with_filter(self, name: str, school: str, kind: str) -> List[tuple]:
-        async with self.bot.db.execute(FIND_UNITS_CONTAIN_STRING_WITH_FILTER_QUERY, (name,school,school,kind,kind)) as cursor:
+        async with self.bot.db.execute(FIND_UNITS_CONTAIN_STRING_WITH_FILTER_QUERY, (name.lower(),school,school,kind,kind)) as cursor:
             return await cursor.fetchall()
         
     async def fetch_unit_stats(self, id: str) -> List[tuple]:
