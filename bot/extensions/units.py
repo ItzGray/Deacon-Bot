@@ -153,7 +153,7 @@ class Units(commands.GroupCog, name="unit"):
                 return faction_name, gendered
 
         
-    async def build_unit_embed(self, row):
+    async def build_unit_embed(self, row, show_talent_obj_names: bool):
         unit_id = row[0]
         real_name = row[2].decode("utf-8")
 
@@ -199,9 +199,15 @@ class Units(commands.GroupCog, name="unit"):
                 if talent_name == "":
                     talent_name = object_name
                 if talent[5] == "Template" or talent[5] == "Unknown":
-                    starting_talent_string += talent_name + " " + str(talent[4]) + "\n"
+                    starting_talent_string += talent_name + " " + str(talent[4])
+                    if show_talent_obj_names and object_name != talent_name:
+                        starting_talent_string += " (" + object_name + ")"
+                    starting_talent_string += "\n"
                 elif talent[5] == "Trained":
-                    trained_talent_string += talent_name + " " + str(talent[4]) + "\n"
+                    trained_talent_string += talent_name + " " + str(talent[4])
+                    if show_talent_obj_names and object_name != talent_name:
+                        trained_talent_string += " (" + object_name + ")"
+                    trained_talent_string += "\n"
             elif talent[2] == "Power":
                 power_name, object_name = await database.translate_power_name(self.bot.db, talent[3])
                 if object_name == "":
@@ -355,6 +361,7 @@ class Units(commands.GroupCog, name="unit"):
         name: str,
         school: Optional[Literal["Buccaneer", "Privateer", "Witchdoctor", "Musketeer", "Swashbuckler"]] = "Any",
         kind: Optional[Literal["Ally", "Enemy"]] = "Any",
+        show_talent_obj_names: Optional[bool] = False,
         use_object_name: Optional[bool] = False,
     ):
         await interaction.response.defer()
@@ -387,7 +394,7 @@ class Units(commands.GroupCog, name="unit"):
                     logger.info("Failed to find '{}' instead searching for {}", name, closest_rows[0][-1])
         
         if rows:
-            embeds = [await self.build_unit_embed(row) for row in rows]
+            embeds = [await self.build_unit_embed(row, show_talent_obj_names) for row in rows]
             sorted_embeds = sorted(embeds, key=lambda embed: embed[0].author.name)
             unzipped_embeds, unzipped_images = list(zip(*sorted_embeds))
             view = ItemView(unzipped_embeds, files=unzipped_images)
