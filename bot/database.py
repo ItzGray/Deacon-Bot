@@ -1,7 +1,9 @@
 from enum import IntFlag, Enum
 from struct import unpack
+from tkinter.font import names
 from typing import Tuple, List
 from dataclasses import dataclass
+from random import choice
 from loguru import logger
 import math
 
@@ -303,6 +305,16 @@ def translate_school(school: int) -> discord.PartialEmoji:
 
 def make_school_color(school: str) -> discord.Color:
     return _SCHOOL_COLORS[_SCHOOLS_STR.index(school)]
+
+async def faction_has_names(db, faction: int) -> bool:
+    has_names = False
+    async with db.execute(
+        "SELECT * FROM factions WHERE id == ?", (faction,)
+    ) as cursor:
+        async for row in cursor:
+            has_names = not row[3]
+    
+    return has_names
     
 async def translate_name(db, id: int) -> str:
     name = ""
@@ -350,6 +362,29 @@ async def translate_unit_name(db, id: int) -> str:
             if name == None:
                 name = object_name
     return name, object_name
+
+async def generate_random_name(db, faction: int) -> str:
+    first_names = []
+    last_names = []
+    articles = []
+    async with db.execute(
+        "SELECT * FROM random_names WHERE random_names.faction == ?", (faction,)
+    ) as cursor:
+        async for row in cursor:
+            if row[3] == "FirstNames":
+                first_names.append(row[1])
+            elif row[3] == "LastNames":
+                last_names.append(row[1])
+            elif row[3] == "Articles":
+                articles.append(row[1])
+    
+    if first_names or last_names or articles:
+        article = await translate_name(db, choice(articles)) if articles else ""
+        first_name = await translate_name(db, choice(first_names)) if first_names else ""
+        last_name = await translate_name(db, choice(last_names)) if last_names else ""
+        return f"{article} {first_name} {last_name}".strip()
+    else:
+        return "(Random Name)"
 
 async def fetch_curve(db, curve):
     stats = []

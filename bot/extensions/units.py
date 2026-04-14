@@ -153,7 +153,7 @@ class Units(commands.GroupCog, name="unit"):
                 return faction_name, gendered
 
         
-    async def build_unit_embed(self, row, show_talent_obj_names: bool):
+    async def build_unit_embed(self, row, show_talent_obj_names: bool, generate_random_name: bool):
         unit_id = row[0]
         real_name = row[2].decode("utf-8")
 
@@ -167,6 +167,7 @@ class Units(commands.GroupCog, name="unit"):
         unit_dmg_type = row[8]
         unit_primary_stat = database.translate_stat_flags(int(row[9]))
         unit_primary_attack, unit_primary_attack_obj = await database.translate_power_name(self.bot.db, int(row[12]))
+        has_random_name = row[14]
 
         unit_stats = await self.fetch_unit_stats(unit_id)
         unit_talents = await self.fetch_unit_talents(unit_id)
@@ -225,10 +226,18 @@ class Units(commands.GroupCog, name="unit"):
             starting_power_string += await self.fetch_curve_powers(row[10])
         
         title_string = ""
-        if unit_name == unit_title or unit_title == "":
+        if (unit_name == unit_title and not has_random_name) or unit_title == "":
             title_string = ""
-        else:
+        elif unit_name == unit_title and has_random_name and await database.faction_has_names(self.bot.db, unit_faction):
+            if not generate_random_name:
+                unit_name = "(Random Name)"
+            else:
+                unit_name = await database.generate_random_name(self.bot.db, unit_faction)
             title_string += "\n" + unit_title
+        elif unit_name != unit_title:
+            title_string += "\n" + unit_title
+        elif unit_name == unit_title:
+            title_string = ""
 
         desc_string = ""
         if unit_primary_attack != "":
@@ -362,6 +371,7 @@ class Units(commands.GroupCog, name="unit"):
         school: Optional[Literal["Buccaneer", "Privateer", "Witchdoctor", "Musketeer", "Swashbuckler"]] = "Any",
         kind: Optional[Literal["Ally", "Enemy"]] = "Any",
         show_talent_obj_names: Optional[bool] = False,
+        generate_random_name: Optional[bool] = False,
         use_object_name: Optional[bool] = False,
     ):
         await interaction.response.defer()
@@ -394,7 +404,7 @@ class Units(commands.GroupCog, name="unit"):
                     logger.info("Failed to find '{}' instead searching for {}", name, closest_rows[0][-1])
         
         if rows:
-            embeds = [await self.build_unit_embed(row, show_talent_obj_names) for row in rows]
+            embeds = [await self.build_unit_embed(row, show_talent_obj_names, generate_random_name) for row in rows]
             sorted_embeds = sorted(embeds, key=lambda embed: embed[0].author.name)
             unzipped_embeds, unzipped_images = list(zip(*sorted_embeds))
             view = ItemView(unzipped_embeds, files=unzipped_images)
@@ -413,6 +423,10 @@ class Units(commands.GroupCog, name="unit"):
             unit_name = await database.translate_name(self.bot.db, row[1])
             unit_title = " - "
             unit_title += await database.translate_name(self.bot.db, row[4])
+            unit_faction = row[6]
+            has_random_name = row[14]
+            if f" - {unit_name}" == unit_title and has_random_name and await database.faction_has_names(self.bot.db, unit_faction):
+                unit_name = "*(Random Name)*"
             if f" - {unit_name}" == unit_title or unit_title == " - ":
                 unit_title = ""
             unit_school = row[7]
