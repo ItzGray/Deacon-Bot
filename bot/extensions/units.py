@@ -613,6 +613,8 @@ class Units(commands.GroupCog, name="unit"):
     async def build_calc_embed(self, row, level: int):
         unit_id = row[0]
         real_name = row[2].decode("utf-8")
+        unit_faction = row[6]
+        has_random_name = row[14]
 
         unit_name = await database.translate_name(self.bot.db, row[1])
         unit_title = await database.translate_name(self.bot.db, row[4])
@@ -622,10 +624,15 @@ class Units(commands.GroupCog, name="unit"):
             unit_image = ""
 
         title_string = ""
-        if unit_name == unit_title or unit_title == "":
+        if (unit_name == unit_title and not has_random_name) or unit_title == "":
             title_string = ""
-        else:
+        elif unit_name == unit_title and has_random_name and await database.faction_has_names(self.bot.db, unit_faction):
+            unit_name = "(Random Name)"
             title_string += "\n" + unit_title
+        elif unit_name != unit_title:
+            title_string += "\n" + unit_title
+        elif unit_name == unit_title:
+            title_string = ""
 
         unit_school = row[7]
         unit_curve = row[10]
