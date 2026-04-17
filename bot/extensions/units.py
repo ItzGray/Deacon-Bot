@@ -232,7 +232,7 @@ class Units(commands.GroupCog, name="unit"):
             if not generate_random_name:
                 unit_name = "(Random Name)"
             else:
-                unit_name = await database.generate_random_name(self.bot.db, unit_faction)
+                unit_name = await database.generate_random_name(self.bot.db, unit_faction, unit_gender)
             title_string += "\n" + unit_title
         elif unit_name != unit_title:
             title_string += "\n" + unit_title

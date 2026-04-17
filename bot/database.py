@@ -363,21 +363,26 @@ async def translate_unit_name(db, id: int) -> str:
                 name = object_name
     return name, object_name
 
-async def generate_random_name(db, faction: int) -> str:
+async def generate_random_name(db, faction: int, gender: int) -> str:
     first_names = []
     last_names = []
     articles = []
     async with db.execute(
-        "SELECT * FROM random_names WHERE random_names.faction == ?", (faction,)
+        "SELECT * FROM random_names WHERE random_names.faction == ? AND random_names.gender == ?", (faction, gender,)
     ) as cursor:
         async for row in cursor:
             if row[3] == "FirstNames":
                 first_names.append(row[1])
-            elif row[3] == "LastNames":
+    
+    async with db.execute(
+        "SELECT * FROM random_names WHERE random_names.faction == ?", (faction,)
+    ) as cursor:
+        async for row in cursor:
+            if row[3] == "LastNames":
                 last_names.append(row[1])
             elif row[3] == "Articles":
                 articles.append(row[1])
-    
+
     if first_names or last_names or articles:
         article = await translate_name(db, choice(articles)) if articles else ""
         first_name = await translate_name(db, choice(first_names)) if first_names else ""
