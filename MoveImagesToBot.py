@@ -83,7 +83,7 @@ async def move_images_to_bot():
                             print("No real image path!")
                             continue
                     data = real_image_data
-                output_path = output_dir / f"{path.split("/")[-1].split(".")[0]}.png"
+                output_path = output_dir / f"{path.split('/')[-1].split('.')[0]}.png"
                 with Image(blob=data) as img:
                     try:
                         img.save(filename=output_path)
@@ -147,7 +147,7 @@ async def move_images_to_bot():
                                 continue
                     else:
                         real_image_data = data
-                    output_path = output_dir / f"{final_path.split("/")[-1].split(".")[0]}.png"
+                    output_path = output_dir / f"{final_path.split('/')[-1].split('.')[0]}.png"
                     with Image(blob=real_image_data) as img:
                         try:
                             img.save(filename=output_path)

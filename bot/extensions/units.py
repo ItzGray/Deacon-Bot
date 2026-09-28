@@ -584,10 +584,10 @@ class Units(commands.GroupCog, name="unit"):
                                 lvl_count = 0
                                 final_num += ((increment_num * modifier[4]) * lvl_num)
                     else:
-                        final_num = raw_num * modifier[4]
+                        final_num = math.floor(raw_num * modifier[4])
                     no_operator = False
                 elif modifier[3] == "Multiply Add":
-                    final_num = raw_num * (modifier[4] + 1)
+                    final_num = math.floor(raw_num * (modifier[4] + 1))
                     no_operator = False
                 elif modifier[3] == "Add" or modifier[3] == "Set Add":
                     if bonus_flag == True:
@@ -600,11 +600,7 @@ class Units(commands.GroupCog, name="unit"):
             if no_operator == True:
                 final_num = raw_num
             round_down_stats = ["Will", "Agility", "Strength", "Talent Slots", "Attack Range"]
-            final_num = round(final_num, 2)
-            if curr_stat not in round_down_stats:
-                final_num = round(final_num)
-            else:
-                final_num = math.floor(final_num)
+            final_num = math.floor(final_num)
             final_stats.append((curr_stat, final_num))
             stat += curr_stat_count
 
