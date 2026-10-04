@@ -13,6 +13,7 @@ class BinDeserializer:
         opts.flags = 1
         opts.shallow = False
         opts.skip_unknown_types = True
+        opts.djb2_only = True
         
         self.types = TypeList.open(types_path)
 
@@ -36,6 +37,7 @@ async def move_images_to_bot():
     player_worlddata = Archive.mmap("Player-WorldData.wad")
     root = Archive.mmap("Root.wad")
     shared_worlddata = Archive.mmap("_Shared-WorldData.wad")
+    ship_worlddata = Archive.mmap("Ship-WorldData.wad")
     de = BinDeserializer("types.json")
     async with aiosqlite.connect("items.db") as temp_db:
         db = await aiosqlite.connect(":memory:")
@@ -46,7 +48,7 @@ async def move_images_to_bot():
         async for row in cursor:
             if row[2] == "":
                 continue
-            print(f"Processing: {row[2].split('?')[0]}")
+            print(f"Processing: {row[2]}")
             full_path = row[2]
             if full_path.startswith("|_Shared|WorldData|"):
                 wad = shared_worlddata
@@ -54,6 +56,8 @@ async def move_images_to_bot():
                 wad = mob_worlddata
             elif full_path.startswith("|Player|WorldData|"):
                 wad = player_worlddata
+            elif full_path.startswith("|Ship|WorldData|"):
+                wad = ship_worlddata
             path = full_path.split("|")[-1]
             try:
                 path = path.split("?")[0]
@@ -62,7 +66,11 @@ async def move_images_to_bot():
             try:
                 data = wad[path]
             except:
-                data = root[path]
+                try:
+                    data = root[path]
+                except:
+                    print("No path!")
+                    continue
             if row[1] == "Image":
                 if path.split(".")[-1] == "tex":
                     deserialized_data = de.deserialize(data[4:])
@@ -73,6 +81,8 @@ async def move_images_to_bot():
                         wad = mob_worlddata
                     elif real_image_path.startswith("|Player|WorldData|"):
                         wad = player_worlddata
+                    elif real_image_path.startswith("|Ship|WorldData|"):
+                        wad = ship_worlddata
                     path = real_image_path.split("|")[-1]
                     try:
                         real_image_data = wad[path]
@@ -83,7 +93,7 @@ async def move_images_to_bot():
                             print("No real image path!")
                             continue
                     data = real_image_data
-                output_path = output_dir / f"{path.split('/')[-1].split('.')[0]}.png"
+                output_path = output_dir / f"{path.split("/")[-1].split(".")[0]}.png"
                 with Image(blob=data) as img:
                     try:
                         img.save(filename=output_path)
@@ -102,11 +112,8 @@ async def move_images_to_bot():
                     try:
                         image = draw_behavior["m_icons"][0].decode("utf-8")
                     except:
-                        try:
-                            image = row[3]
-                        except:
-                            print("No image path!")
-                            continue
+                        print("No icons!")
+                        continue
                     image_split = image.split("/")[-1]
                     try:
                         image_split = image_split.split("?")[0]
@@ -118,6 +125,8 @@ async def move_images_to_bot():
                         wad = mob_worlddata
                     elif image.startswith("|Player|WorldData|"):
                         wad = player_worlddata
+                    elif image.startswith("|Ship|WorldData|"):
+                        wad = ship_worlddata
                     path = image.split("|")[-1].split("?")[0]
                     try:
                         data = wad[path]
@@ -125,7 +134,7 @@ async def move_images_to_bot():
                         try:
                             data = root[path]
                         except:
-                            print("No image path!")
+                            print("No path!")
                             continue
                     if image_split.split(".")[-1] == "tex":
                         deserialized_data = de.deserialize(data[4:])
@@ -136,6 +145,8 @@ async def move_images_to_bot():
                             wad = mob_worlddata
                         elif real_image_path.startswith("|Player|WorldData|"):
                             wad = player_worlddata
+                        elif real_image_path.startswith("|Ship|WorldData|"):
+                            wad = ship_worlddata
                         path = real_image_path.split("|")[-1]
                         try:
                             real_image_data = wad[path]
@@ -147,7 +158,7 @@ async def move_images_to_bot():
                                 continue
                     else:
                         real_image_data = data
-                    output_path = output_dir / f"{final_path.split('/')[-1].split('.')[0]}.png"
+                    output_path = output_dir / f"{final_path.split("/")[-1].split(".")[0]}.png"
                     with Image(blob=real_image_data) as img:
                         try:
                             img.save(filename=output_path)
