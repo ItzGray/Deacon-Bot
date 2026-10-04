@@ -1,9 +1,7 @@
 from enum import IntFlag, Enum
 from struct import unpack
-from tkinter.font import names
 from typing import Tuple, List
 from dataclasses import dataclass
-from random import choice
 from loguru import logger
 import math
 
@@ -19,6 +17,18 @@ _SCHOOL_COLORS = [
     discord.Color.green(), # Witchdoctor
     discord.Color.orange(), # Musketeer
     discord.Color.purple(), # Swashbuckler
+]
+
+_ORIGIN_COLORS = [
+    discord.Color.greyple(), # Universal
+    discord.Color.greyple(), # Universal
+    discord.Color.from_rgb(137, 81, 41), # Raft (Brown)
+    discord.Color.light_grey(), # Pirate
+    discord.Color.dark_orange(), # Monquistador
+    discord.Color.purple(), # Bison
+    discord.Color.red(), # Samoorai
+    discord.Color.blue(), # Royal Navy
+    discord.Color.gold(), # Eagle
 ]
 
 _SCHOOLS = [
@@ -43,6 +53,17 @@ _ITEMS = [
     MOUNT,
 ]
 
+_SHIP_ITEMS = [
+    ANCHOR,
+    ARMOR,
+    CANNONS,
+    FIGUREHEAD,
+    HORN,
+    RUDDER,
+    SAILS,
+    WHEEL,
+]
+
 _ITEMS_STR = [
     "Hat",
     "Outfit",
@@ -63,6 +84,29 @@ _SCHOOLS_STR = [
     "Witchdoctor",
     "Musketeer",
     "Swashbuckler",
+]
+
+_SHIP_ITEMS_STR = [
+    "Anchor",
+    "Armor",
+    "Cannons",
+    "Figurehead",
+    "Horn",
+    "Rudder",
+    "Sails",
+    "Wheel",
+]
+
+_ORIGINS_STR = [
+    None, # Universal
+    "All", # Universal
+    "Raft",
+    "Pirate",
+    "Monquistador",
+    "Bison",
+    "Samoorai",
+    "Royal Navy",
+    "Eagle",
 ]
 
 _STATS = [
@@ -119,6 +163,36 @@ _STATS_STR = [
     "Speed",
     "Current Health1",
     "Max Health1"
+]
+
+_SHIP_STATS = [
+    SHIP_HEALTH,
+    SHIP_ARMOR,
+    SHIP_ACCURACY,
+    SHIP_DAMAGE,
+    SHIP_DODGE,
+    SHIP_SPEED,
+    SHIP_SPEED,
+    SHIP_TURN_SPEED,
+    SHIP_REPAIR_RATE,
+    SHIP_BOOST_SPEED,
+    SHIP_FUEL_CAPACITY,
+    SHIP_FUEL_EFFICIENCY,
+]
+
+_SHIP_STATS_STR = [
+    "Max Hull Integrity",
+    "Hull Armor",
+    "Ship Accuracy",
+    "Ship Damage",
+    "Defense",
+    "Maximum Speed",
+    "Acceleration",
+    "Turning Speed",
+    "Hull Repair Rate",
+    "Boost Speed",
+    "Max Boost Fuel Capacity",
+    "Boost Fuel Efficiency",
 ]
 
 _WEAPON_TYPES = [
@@ -304,17 +378,16 @@ def translate_school(school: int) -> discord.PartialEmoji:
     return _SCHOOLS[school]
 
 def make_school_color(school: str) -> discord.Color:
-    return _SCHOOL_COLORS[_SCHOOLS_STR.index(school)]
+    try:
+        return _SCHOOL_COLORS[_SCHOOLS_STR.index(school)]
+    except:
+        return discord.Color.greyple()
 
-async def faction_has_names(db, faction: int) -> bool:
-    has_names = False
-    async with db.execute(
-        "SELECT * FROM factions WHERE id == ?", (faction,)
-    ) as cursor:
-        async for row in cursor:
-            has_names = not row[3]
-    
-    return has_names
+def make_origin_color(school: str) -> discord.Color:
+    try:
+        return _ORIGIN_COLORS[_ORIGINS_STR.index(school)]
+    except:
+        return discord.Color.greyple()
     
 async def translate_name(db, id: int) -> str:
     name = ""
@@ -363,35 +436,18 @@ async def translate_unit_name(db, id: int) -> str:
                 name = object_name
     return name, object_name
 
-async def generate_random_name(db, faction: int, gender: str) -> str:
-    first_names = []
-    last_names = []
-    articles = []
+async def translate_ship_power_name(db, id: int) -> str:
+    name = ""
+    object_name = ""
     async with db.execute(
-        "SELECT * FROM random_names WHERE random_names.faction == ? AND random_names.gender == ?", (faction, gender,)
+        "SELECT * FROM ship_abilities WHERE id == ?", (id,)
     ) as cursor:
         async for row in cursor:
-            if row[3] == "FirstNames":
-                first_names.append(row[1])
-    
-    async with db.execute(
-        "SELECT * FROM random_names WHERE random_names.faction == ?", (faction,)
-    ) as cursor:
-        async for row in cursor:
-            if row[3] == "LastNames":
-                last_names.append(row[1])
-            elif row[3] == "Articles":
-                articles.append(row[1])
-            elif row[3] == "FirstNames" and not first_names:
-                first_names.append(row[1])
-
-    if first_names or last_names or articles:
-        article = await translate_name(db, choice(articles)) if articles else ""
-        first_name = await translate_name(db, choice(first_names)) if first_names else ""
-        last_name = await translate_name(db, choice(last_names)) if last_names else ""
-        return f"{article} {first_name} {last_name}".strip()
-    else:
-        return "(Random Name)"
+            name = await translate_name(db, row[1])
+            object_name = row[2].decode("utf-8")
+            if name == None:
+                name = object_name
+    return name, object_name
 
 async def fetch_curve(db, curve):
     stats = []
@@ -425,6 +481,12 @@ def get_item_icon_url(item_type: str) -> str:
         return _ITEMS[_ITEMS_STR.index(item_type)].url
     except:
         return ""
+    
+def get_ship_item_icon_url(item_type: str) -> str:
+    try:
+        return _SHIP_ITEMS[_SHIP_ITEMS_STR.index(item_type)].url
+    except:
+        return ""
 
 def get_school_icon_url(school: str) -> str:
     try:
@@ -441,6 +503,12 @@ def get_school_emoji(school: str):
 def get_stat_emoji(stat: str):
     try:
         return _STATS[_STATS_STR.index(stat)]
+    except:
+        return ""
+
+def get_ship_stat_emoji(stat: str):
+    try:
+        return _SHIP_STATS[_SHIP_STATS_STR.index(stat)]
     except:
         return ""
 
