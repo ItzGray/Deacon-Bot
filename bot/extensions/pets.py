@@ -70,7 +70,7 @@ class Pets(commands.GroupCog, name="pet"):
             return await cursor.fetchall()
 
     async def fetch_pet_list(self, name: str) -> List[tuple]:
-        async with self.bot.db.execute(FIND_PET_CONTAIN_STRING_QUERY, (name,)) as cursor:
+        async with self.bot.db.execute(FIND_PET_CONTAIN_STRING_QUERY, (name.lower(),)) as cursor:
             return await cursor.fetchall()
     
     async def fetch_pet_talents(self, id: str) -> List[tuple]:

@@ -95,11 +95,11 @@ class Units(commands.GroupCog, name="unit"):
             return await cursor.fetchall()
         
     async def fetch_unit_list(self, name: str) -> List[tuple]:
-        async with self.bot.db.execute(FIND_UNIT_CONTAIN_STRING_QUERY, (name,)) as cursor:
+        async with self.bot.db.execute(FIND_UNIT_CONTAIN_STRING_QUERY, (name.lower(),)) as cursor:
             return await cursor.fetchall()
     
     async def fetch_unit_list_with_filter(self, name: str, school: str, kind: str) -> List[tuple]:
-        async with self.bot.db.execute(FIND_UNITS_CONTAIN_STRING_WITH_FILTER_QUERY, (name,school,school,kind,kind)) as cursor:
+        async with self.bot.db.execute(FIND_UNITS_CONTAIN_STRING_WITH_FILTER_QUERY, (name.lower(),school,school,kind,kind)) as cursor:
             return await cursor.fetchall()
         
     async def fetch_unit_stats(self, id: str) -> List[tuple]:
@@ -151,8 +151,9 @@ class Units(commands.GroupCog, name="unit"):
                 faction_name = row[1].decode("utf-8")
                 gendered = row[2]
                 return faction_name, gendered
+
         
-    async def build_unit_embed(self, row):
+    async def build_unit_embed(self, row, show_talent_obj_names: bool, generate_random_name: bool):
         unit_id = row[0]
         real_name = row[2].decode("utf-8")
 
@@ -166,6 +167,7 @@ class Units(commands.GroupCog, name="unit"):
         unit_dmg_type = row[8]
         unit_primary_stat = database.translate_stat_flags(int(row[9]))
         unit_primary_attack, unit_primary_attack_obj = await database.translate_power_name(self.bot.db, int(row[12]))
+        has_random_name = row[14]
 
         unit_stats = await self.fetch_unit_stats(unit_id)
         unit_talents = await self.fetch_unit_talents(unit_id)
@@ -198,9 +200,15 @@ class Units(commands.GroupCog, name="unit"):
                 if talent_name == "":
                     talent_name = object_name
                 if talent[5] == "Template" or talent[5] == "Unknown":
-                    starting_talent_string += talent_name + " " + str(talent[4]) + "\n"
+                    starting_talent_string += talent_name + " " + str(talent[4])
+                    if show_talent_obj_names and object_name != talent_name:
+                        starting_talent_string += " (" + object_name + ")"
+                    starting_talent_string += "\n"
                 elif talent[5] == "Trained":
-                    trained_talent_string += talent_name + " " + str(talent[4]) + "\n"
+                    trained_talent_string += talent_name + " " + str(talent[4])
+                    if show_talent_obj_names and object_name != talent_name:
+                        trained_talent_string += " (" + object_name + ")"
+                    trained_talent_string += "\n"
             elif talent[2] == "Power":
                 power_name, object_name = await database.translate_power_name(self.bot.db, talent[3])
                 if object_name == "":
@@ -215,23 +223,34 @@ class Units(commands.GroupCog, name="unit"):
         if row[10] == 656667 and "Alert" not in starting_talent_string:
             starting_talent_string += "Alert 1\n"
         if row[13]:
-            starting_power_string += await self.fetch_curve_powers(row[8])
+            starting_power_string += await self.fetch_curve_powers(row[10])
         
         title_string = ""
-        if unit_name == unit_title or unit_title == "":
+        if (unit_name == unit_title and not has_random_name) or unit_title == "":
             title_string = ""
-        else:
+        elif unit_name == unit_title and has_random_name and await database.faction_has_names(self.bot.db, unit_faction):
+            if not generate_random_name:
+                unit_name = "(Random Name)"
+            else:
+                unit_name = await database.generate_random_name(self.bot.db, unit_faction, unit_gender)
             title_string += "\n" + unit_title
+        elif unit_name != unit_title:
+            title_string += "\n" + unit_title
+        elif unit_name == unit_title:
+            title_string = ""
 
         desc_string = ""
         if unit_primary_attack != "":
             desc_string += f"Primary Attack - {unit_primary_attack} ({unit_primary_attack_obj})\n"
         if unit_faction != 0:
-            faction_name, gendered = await self.get_faction_name(unit_faction)
-            if not gendered:
-                desc_string += f"Faction - {faction_name}\n"
-            else:
-                desc_string += f"Faction - {faction_name} ({unit_gender})\n"
+            try:
+                faction_name, gendered = await self.get_faction_name(unit_faction)
+                if not gendered:
+                    desc_string += f"Faction - {faction_name}\n"
+                else:
+                    desc_string += f"Faction - {faction_name} ({unit_gender})\n"
+            except:
+                pass
         desc_string += "Does " + unit_dmg_type + f" {database.get_stat_emoji(unit_dmg_type)}\n"
         desc_string += "Boosts from "
         for flag in range(len(unit_primary_stat)):
@@ -351,6 +370,8 @@ class Units(commands.GroupCog, name="unit"):
         name: str,
         school: Optional[Literal["Buccaneer", "Privateer", "Witchdoctor", "Musketeer", "Swashbuckler"]] = "Any",
         kind: Optional[Literal["Ally", "Enemy"]] = "Any",
+        show_talent_obj_names: Optional[bool] = False,
+        generate_random_name: Optional[bool] = False,
         use_object_name: Optional[bool] = False,
     ):
         await interaction.response.defer()
@@ -383,7 +404,7 @@ class Units(commands.GroupCog, name="unit"):
                     logger.info("Failed to find '{}' instead searching for {}", name, closest_rows[0][-1])
         
         if rows:
-            embeds = [await self.build_unit_embed(row) for row in rows]
+            embeds = [await self.build_unit_embed(row, show_talent_obj_names, generate_random_name) for row in rows]
             sorted_embeds = sorted(embeds, key=lambda embed: embed[0].author.name)
             unzipped_embeds, unzipped_images = list(zip(*sorted_embeds))
             view = ItemView(unzipped_embeds, files=unzipped_images)
@@ -402,9 +423,13 @@ class Units(commands.GroupCog, name="unit"):
             unit_name = await database.translate_name(self.bot.db, row[1])
             unit_title = " - "
             unit_title += await database.translate_name(self.bot.db, row[4])
+            unit_faction = row[6]
+            has_random_name = row[14]
+            if f" - {unit_name}" == unit_title and has_random_name and await database.faction_has_names(self.bot.db, unit_faction):
+                unit_name = "*(Random Name)*"
             if f" - {unit_name}" == unit_title or unit_title == " - ":
                 unit_title = ""
-            unit_school = row[5]
+            unit_school = row[7]
             if len(desc_strings[desc_index]) >= 1500:
                 desc_index += 1
                 desc_strings.append("")
@@ -559,10 +584,10 @@ class Units(commands.GroupCog, name="unit"):
                                 lvl_count = 0
                                 final_num += ((increment_num * modifier[4]) * lvl_num)
                     else:
-                        final_num = raw_num * modifier[4]
+                        final_num = math.floor(raw_num * modifier[4])
                     no_operator = False
                 elif modifier[3] == "Multiply Add":
-                    final_num = raw_num * (modifier[4] + 1)
+                    final_num = math.floor(raw_num * (modifier[4] + 1))
                     no_operator = False
                 elif modifier[3] == "Add" or modifier[3] == "Set Add":
                     if bonus_flag == True:
@@ -575,11 +600,7 @@ class Units(commands.GroupCog, name="unit"):
             if no_operator == True:
                 final_num = raw_num
             round_down_stats = ["Will", "Agility", "Strength", "Talent Slots", "Attack Range"]
-            final_num = round(final_num, 2)
-            if curr_stat not in round_down_stats:
-                final_num = round(final_num)
-            else:
-                final_num = math.floor(final_num)
+            final_num = math.floor(final_num)
             final_stats.append((curr_stat, final_num))
             stat += curr_stat_count
 
@@ -588,6 +609,8 @@ class Units(commands.GroupCog, name="unit"):
     async def build_calc_embed(self, row, level: int):
         unit_id = row[0]
         real_name = row[2].decode("utf-8")
+        unit_faction = row[6]
+        has_random_name = row[14]
 
         unit_name = await database.translate_name(self.bot.db, row[1])
         unit_title = await database.translate_name(self.bot.db, row[4])
@@ -597,13 +620,18 @@ class Units(commands.GroupCog, name="unit"):
             unit_image = ""
 
         title_string = ""
-        if unit_name == unit_title or unit_title == "":
+        if (unit_name == unit_title and not has_random_name) or unit_title == "":
             title_string = ""
-        else:
+        elif unit_name == unit_title and has_random_name and await database.faction_has_names(self.bot.db, unit_faction):
+            unit_name = "(Random Name)"
             title_string += "\n" + unit_title
+        elif unit_name != unit_title:
+            title_string += "\n" + unit_title
+        elif unit_name == unit_title:
+            title_string = ""
 
-        unit_school = row[5]
-        unit_curve = row[8]
+        unit_school = row[7]
+        unit_curve = row[10]
 
         unit_modifiers = await self.fetch_unit_stats(unit_id)
 
