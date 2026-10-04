@@ -59,7 +59,7 @@ class Powers(commands.GroupCog, name="power"):
             return await cursor.fetchall()
         
     async def fetch_power_list(self, name: str) -> List[tuple]:
-        async with self.bot.db.execute(FIND_POWER_CONTAIN_STRING_QUERY, (name.lower(),)) as cursor:
+        async with self.bot.db.execute(FIND_POWER_CONTAIN_STRING_QUERY, (name,)) as cursor:
             return await cursor.fetchall()
         
     async def fetch_power_adjustments(self, id: str) -> List[tuple]:
@@ -168,9 +168,6 @@ class Powers(commands.GroupCog, name="power"):
                     power_desc = power_desc.replace(f"${desc_split}$", f"{desc_img}")
                     continue
                 if "eDuration" in desc_split:
-                    if power_id == 1732035: # Special case for Branch's Teaching, I'll revisit this later if more powers start breaking
-                        power_desc = power_desc.replace(f"${desc_split}$", "")
-                        continue
                     try:
                         duration_num = int(desc_split[-1])
                         if duration_num == 1 and power_id == 1698747: # Fix for Deadly Shadowdance, I'll revisit this later if more powers start breaking
