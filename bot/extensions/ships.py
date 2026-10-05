@@ -123,6 +123,7 @@ class Ships(commands.GroupCog, name="ship"):
         ship_origin = row[5]
         ship_lvl_req = row[6]
         ship_class = row[8]
+        unsinkable = row[9]
 
         ship_default_powers = await self.fetch_default_powers(ship_id)
         ship_units = await self.fetch_ship_units(ship_id)
@@ -144,13 +145,19 @@ class Ships(commands.GroupCog, name="ship"):
         
         power_string = ""
         for power in powers:
-            power_string += f"{await database.translate_name(self.bot.db, power[0][1])} ({power[0][2].decode('utf-8')})\n"
+            power_name = await database.translate_name(self.bot.db, power[0][1])
+            if power_name:
+                power_string += f"{power_name} ({power[0][2].decode('utf-8')})\n"
+            else:
+                power_string += f"{power[0][2].decode('utf-8')} ({power[0][2].decode('utf-8')})\n"
 
         unit_string = ""
         for unit in units:
             unit_string += f"{await database.translate_name(self.bot.db, unit[0][1])} ({unit[0][2].decode('utf-8')})\n"
 
         desc_string = ""
+        if unsinkable:
+            desc_string += f"**{emojis.SHIP_UNSINKABLE} Unsinkable**\n"
         if ship_origin:
             desc_string += f"{ship_origin} Origin\n"
         
@@ -174,7 +181,7 @@ class Ships(commands.GroupCog, name="ship"):
                 color=database.make_origin_color(ship_origin),
                 description=desc_string,
             )
-            .set_author(name=author_string)
+            .set_author(name=author_string, icon_url=emojis.SHIP.url)
         )
 
         if requirement_string != "":
@@ -220,14 +227,14 @@ class Ships(commands.GroupCog, name="ship"):
     ):
         await interaction.response.defer()
         if type(interaction.channel) is DMChannel or type(interaction.channel) is PartialMessageable:
-            logger.info("{} requested item '{}'", interaction.user.name, name)
+            logger.info("{} requested ship '{}'", interaction.user.name, name)
         else:
-            logger.info("{} requested item '{}' in channel #{} of {}", interaction.user.name, name, interaction.channel.name, interaction.guild.name)
+            logger.info("{} requested ship '{}' in channel #{} of {}", interaction.user.name, name, interaction.channel.name, interaction.guild.name)
         
         if use_object_name:
             rows = await self.fetch_object_name(name)
             if not rows:
-                embed = discord.Embed(description=f"No items with object name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
+                embed = discord.Embed(description=f"No ships with object name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
                 await interaction.followup.send(embed=embed)
         
         else:
@@ -249,7 +256,7 @@ class Ships(commands.GroupCog, name="ship"):
             await view.start(interaction)
         elif not use_object_name:
             logger.info("Failed to find '{}'", name)
-            embed = discord.Embed(description=f"No items with name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
+            embed = discord.Embed(description=f"No ships with name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
             await interaction.followup.send(embed=embed)
 
 async def setup(bot: TheBot):

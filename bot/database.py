@@ -21,6 +21,17 @@ _SCHOOL_COLORS = [
     discord.Color.purple(), # Swashbuckler
 ]
 
+_ORIGIN_COLORS = {
+    None: discord.Color.greyple(),
+    "All": discord.Color.greyple(),
+    "Raft": discord.Color.from_str("#794d07"),
+    "Monquistador": discord.Color.from_str("#919100"),
+    "Cool Ranch": discord.Color.orange(),
+    "Samoorai": discord.Color.red(),
+    "Royal Navy": discord.Color.dark_blue(),
+    "Eagle": discord.Color.yellow()
+}
+
 _SCHOOLS = [
     UNIVERSAL,
     UNIVERSAL,
@@ -64,6 +75,17 @@ _SCHOOLS_STR = [
     "Musketeer",
     "Swashbuckler",
 ]
+
+_SHIP_ITEMS = {
+    "Anchor": ANCHOR,
+    "Armor": SHIP_ARMOR,
+    "Cannons": CANNONS,
+    "Figurehead": FIGUREHEAD,
+    "Horn": HORN,
+    "Rudder": RUDDER,
+    "Sails": SAILS,
+    "Wheel": WHEEL
+}
 
 _STATS = [
     HEALTH,
@@ -120,6 +142,20 @@ _STATS_STR = [
     "Current Health1",
     "Max Health1"
 ]
+
+_SHIP_STATS = {
+    "Ship Accuracy": SHIP_ACCURACY,
+    "Hull Armor": SHIP_ARMOR,
+    "Boost Speed": SHIP_BOOST_SPEED,
+    "Ship Damage": SHIP_DAMAGE,
+    "Defense": SHIP_DODGE,
+    "Boost Fuel Efficiency": SHIP_BOOST_EFF,
+    "Max Boost Fuel Capacity": SHIP_BOOST_CAPACITY,
+    "Max Hull Integrity": SHIP_HEALTH,
+    "Hull Repair Rate": SHIP_REPAIR_RATE,
+    "Maximum Speed": SHIP_MAX_SPEED,
+    "Turning Speed": SHIP_TURN_SPEED
+}
 
 _WEAPON_TYPES = [
     SHOOTY,
@@ -191,6 +227,28 @@ _IMG_ICONS = {
     "Icon_Talent_Star_Yellow_01": TALENT_STAR,
     "Icon_Chance_Med": CHANCE,
     "Icon_TimesPerTurn_Med": TIMES,
+    "Icon_MyShip_Med": SHIP,
+    "Icon_BS_Fire_01_Med": FIRE_1,
+    "Icon_BS_Fire_02_Med": FIRE_2,
+    "Icon_BS_Fire_03_Med": FIRE_3,
+    "Icon_BS_General_01_Med": GENERAL_1,
+    "Icon_BS_General_02_Med": GENERAL_2,
+    "Icon_BS_General_03_Med": GENERAL_3,
+    "Icon_BS_Ice_01_Med": ICE_1,
+    "Icon_BS_Ice_02_Med": ICE_2,
+    "Icon_BS_Ice_03_Med": ICE_3,
+    "Icon_BS_Obstacle_01_Med": OBSTACLE_1,
+    "Icon_BS_Obstacle_02_Med": OBSTACLE_2,
+    "Icon_BS_Obstacle_03_Med": OBSTACLE_3,
+    "Icon_BS_Repair_01_Med": REPAIR_1,
+    "Icon_BS_Repair_02_Med": REPAIR_2,
+    "Icon_BS_Repair_03_Med": REPAIR_3,
+    "Icon_BS_Storm_01_Med": STORM_1,
+    "Icon_BS_Storm_02_Med": STORM_2,
+    "Icon_BS_Storm_03_Med": STORM_3,
+    "Icon_BS_Trap_01_Med": TRAP_1,
+    "Icon_BS_Trap_02_Med": TRAP_2,
+    "Icon_BS_Trap_03_Med": TRAP_3,
 }
 
 _DOT_ICONS = {
@@ -306,6 +364,12 @@ def translate_school(school: int) -> discord.PartialEmoji:
 def make_school_color(school: str) -> discord.Color:
     return _SCHOOL_COLORS[_SCHOOLS_STR.index(school)]
 
+def make_origin_color(origin: str) -> discord.Color:
+    try:
+        return _ORIGIN_COLORS[origin]
+    except:
+        return discord.Color.greyple()
+
 async def faction_has_names(db, faction: int) -> bool:
     has_names = False
     async with db.execute(
@@ -355,6 +419,18 @@ async def translate_unit_name(db, id: int) -> str:
     name = ""
     async with db.execute(
         "SELECT * FROM units WHERE id == ?", (id,)
+    ) as cursor:
+        async for row in cursor:
+            name = await translate_name(db, row[1])
+            object_name = row[2].decode("utf-8")
+            if name == None:
+                name = object_name
+    return name, object_name
+
+async def translate_ship_power_name(db, id: int) -> str:
+    name = ""
+    async with db.execute(
+        "SELECT * FROM ship_abilities WHERE id == ?", (id,)
     ) as cursor:
         async for row in cursor:
             name = await translate_name(db, row[1])
@@ -432,6 +508,12 @@ def get_school_icon_url(school: str) -> str:
     except:
         return ""
 
+def get_ship_item_icon_url(ship_item: str) -> str:
+    try:
+        return _SHIP_ITEMS[ship_item].url
+    except:
+        return ""
+
 def get_item_emoji(item_type: str):
     return _ITEMS[_ITEMS_STR.index(item_type)]
     
@@ -441,6 +523,12 @@ def get_school_emoji(school: str):
 def get_stat_emoji(stat: str):
     try:
         return _STATS[_STATS_STR.index(stat)]
+    except:
+        return ""
+
+def get_ship_stat_emoji(stat: str):
+    try:
+        return _SHIP_STATS[stat]
     except:
         return ""
 

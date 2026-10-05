@@ -9,7 +9,7 @@ Then, head over to the [arrtype repository](https://github.com/wizspoil/arrtype)
 
 To create the database the bot uses go to https://github.com/ItzGray/piratedb and follow the instructions. Copy items.db over when it is completed.
 
-If you want images for the bot, copy Root.wad, _Shared-WorldData.wad, Mob-WorldData.wad, Player-WorldData.wad, and the type file you just dumped (as types.json) into the root directory of the bot.
+If you want images for the bot, copy Root.wad, _Shared-WorldData.wad, Mob-WorldData.wad, Player-WorldData.wad, Ship-WorldData.wad, and the type file you just dumped (as types.json) into the root directory of the bot.
 
 Afterwards, run `py MoveImagesToBot.py` to move and convert all necessary images into the PNG_Images folder. (Note: Running the script requires an ImageMagick installation.)
 
