@@ -58,6 +58,12 @@ SELECT * FROM units
 WHERE units.id == ?
 """
 
+FIND_SHIP_CONTAIN_STRING_QUERY = """
+SELECT * FROM ships
+LEFT JOIN locale_en ON locale_en.id == ships.name
+WHERE INSTR(lower(locale_en.data), ?) > 0
+"""
+
 class Ships(commands.GroupCog, name="ship"):
     def __init__(self, bot: TheBot):
         self.bot = bot
@@ -109,6 +115,10 @@ class Ships(commands.GroupCog, name="ship"):
     
     async def fetch_ship_unit(self, id: str):
         async with self.bot.db.execute(FIND_SHIP_UNIT_QUERY, (id,)) as cursor:
+            return await cursor.fetchall()
+
+    async def fetch_ship_list(self, name: str) -> List[tuple]:
+        async with self.bot.db.execute(FIND_SHIP_CONTAIN_STRING_QUERY, (name.lower(),)) as cursor:
             return await cursor.fetchall()
     
     async def build_ship_embed(self, row):
@@ -257,6 +267,56 @@ class Ships(commands.GroupCog, name="ship"):
         elif not use_object_name:
             logger.info("Failed to find '{}'", name)
             embed = discord.Embed(description=f"No ships with name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
+            await interaction.followup.send(embed=embed)
+
+    async def build_list_embed(self, rows: List[tuple], name: str):
+        desc_strings = []
+        desc_index = 0
+        desc_strings.append("")
+        for row in rows:
+            real_name = row[2].decode("utf-8")
+            power_name = await database.translate_name(self.bot.db, row[1])
+            if len(desc_strings[desc_index]) >= 1000:
+                desc_index += 1
+                desc_strings.append("")
+            desc_strings[desc_index] += f"{emojis.SHIP} {power_name} ({real_name})\n"
+        
+        embeds = []
+        for string in desc_strings:
+            embed = discord.Embed(
+                color=discord.Color.greyple(),
+                description=string,
+            ).set_author(name=f"Searching for: {name}", icon_url=emojis.UNIVERSAL.url)
+            embeds.append(embed)
+
+        return embeds
+
+    @app_commands.command(name="list", description="Finds a list of ship names that contain the string")
+    @app_commands.describe(name="The name of the ships to search for")
+    async def list(
+        self,
+        interaction: discord.Interaction,
+        name: str,
+    ):
+        await interaction.response.defer()
+        if type(interaction.channel) is DMChannel or type(interaction.channel) is PartialMessageable:
+            logger.info("{} requested ship list for '{}'", interaction.user.name, name)
+        else:
+            logger.info("{} requested ship list for '{}' in channel #{} of {}", interaction.user.name, name, interaction.channel.name, interaction.guild.name)
+        
+        rows = await self.fetch_ship_list(name)
+        
+        if rows:
+            view = ItemView(await self.build_list_embed(rows, name))
+            try:
+                await view.start(interaction)
+            except discord.errors.HTTPException:
+                logger.info("List for '{}' too long, sending back error message", name)
+                embed = discord.Embed(description=f"Ship list for {name} too long! Try again with a more specific keyword.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
+                await interaction.followup.send(embed=embed)
+        else:
+            logger.info("Failed to find list for '{}'", name)
+            embed = discord.Embed(description=f"No ships containing name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
             await interaction.followup.send(embed=embed)
 
 async def setup(bot: TheBot):

@@ -21,6 +21,31 @@ _SCHOOL_COLORS = [
     discord.Color.purple(), # Swashbuckler
 ]
 
+_ORIGINS = {
+    "All": UNIVERSAL,
+    "Raft": ORIGIN_RAFT,
+    "Pirate": ORIGIN_PIRATE,
+    "Monquistador": ORIGIN_MONQUISTA,
+    "Cool Ranch": ORIGIN_COOLRANCH2,
+    "Bison": ORIGIN_COOLRANCH,
+    "Samoorai": ORIGIN_MOOSHU,
+    "Royal Navy": ORIGIN_MARLEYBONE,
+    "Eagle": ORIGIN_AQUILA,
+    "Ghost": ORIGIN_GHOST,
+    "Haunted Galleon": ORIGIN_HALLOWEEN,
+    "Beluga": ORIGIN_BELUGA,
+    "ASUS": ORIGIN_ASUS,
+    "Gigabyte": ORIGIN_GIGABYTE,
+    "MSI": ORIGIN_MSI,
+    "VisionTek": ORIGIN_VISIONTEK,
+    "Club 3D": ORIGIN_AMD,
+    "TUL": ORIGIN_AMD,
+    "Diamond": ORIGIN_AMD,
+    "HIS": ORIGIN_AMD,
+    "Sapphire": ORIGIN_AMD,
+    "XFX": ORIGIN_AMD,
+}
+
 _ORIGIN_COLORS = {
     None: discord.Color.greyple(),
     "All": discord.Color.greyple(),
@@ -536,9 +561,21 @@ def get_ship_item_icon_url(ship_item: str) -> str:
 
 def get_item_emoji(item_type: str):
     return _ITEMS[_ITEMS_STR.index(item_type)]
+
+def get_ship_item_emoji(item_type: str):
+    try:
+        return _SHIP_ITEMS[item_type]
+    except:
+        return ""
     
 def get_school_emoji(school: str):
     return _SCHOOLS[_SCHOOLS_STR.index(school)]
+
+def get_origin_emoji(origin: str):
+    try:
+        return _ORIGINS[origin]
+    except:
+        return UNIVERSAL
     
 def get_stat_emoji(stat: str):
     try:

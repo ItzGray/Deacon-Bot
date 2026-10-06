@@ -31,6 +31,18 @@ INNER JOIN locale_en ON locale_en.id == ship_abilities.name
 WHERE locale_en.data COLLATE NOCASE IN ({placeholders})
 """
 
+FIND_SHIP_ABILITY_CONTAIN_STRING_QUERY = """
+SELECT * FROM ship_abilities
+LEFT JOIN locale_en ON locale_en.id == ship_abilities.name
+WHERE INSTR(lower(locale_en.data), ?) > 0
+"""
+
+FIND_SHIP_ABILITY_PLACEHOLDER_QUERY = """
+SELECT * FROM ship_abilities
+INNER JOIN locale_en ON locale_en.id == ship_abilities.name
+WHERE locale_en.data COLLATE NOCASE IN ({placeholders})
+"""
+
 class ShipAbilities(commands.GroupCog, name="shipability"):
     def __init__(self, bot: TheBot):
         self.bot = bot
@@ -52,6 +64,30 @@ class ShipAbilities(commands.GroupCog, name="shipability"):
         for chunk in database.sql_chunked(items, 900):  # Stay under SQLite's limit
             placeholders = database._make_placeholders(len(chunk))
             query = FIND_SHIP_ABILITIES_WITH_FILTER_PLACEHOLDER_QUERY.format(placeholders=placeholders)
+
+            args = (
+                *chunk,
+            )
+
+            async with self.bot.db.execute(query, args) as cursor:
+                rows = await cursor.fetchall()
+
+            results.extend(rows)
+
+        return results
+
+    async def fetch_ship_ability_list(self, name: str) -> List[tuple]:
+        async with self.bot.db.execute(FIND_SHIP_ABILITY_CONTAIN_STRING_QUERY, (name.lower(),)) as cursor:
+            return await cursor.fetchall()
+
+    async def fetch_power_filter_list(self, items) -> List[tuple]:
+        if isinstance(items, str):
+            items = [items]
+
+        results = []
+        for chunk in database.sql_chunked(items, 900):  # Stay under SQLite's limit
+            placeholders = database._make_placeholders(len(chunk))
+            query = FIND_SHIP_ABILITY_PLACEHOLDER_QUERY.format(placeholders=placeholders)
 
             args = (
                 *chunk,
@@ -178,6 +214,56 @@ class ShipAbilities(commands.GroupCog, name="shipability"):
         elif not use_object_name:
             logger.info("Failed to find '{}'", name)
             embed = discord.Embed(description=f"No ship abilities with name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
+            await interaction.followup.send(embed=embed)
+
+    async def build_list_embed(self, rows: List[tuple], name: str):
+        desc_strings = []
+        desc_index = 0
+        desc_strings.append("")
+        for row in rows:
+            real_name = row[2].decode("utf-8")
+            power_name = await database.translate_name(self.bot.db, row[1])
+            if len(desc_strings[desc_index]) >= 1000:
+                desc_index += 1
+                desc_strings.append("")
+            desc_strings[desc_index] += f"{power_name} ({real_name})\n"
+        
+        embeds = []
+        for string in desc_strings:
+            embed = discord.Embed(
+                color=discord.Color.greyple(),
+                description=string,
+            ).set_author(name=f"Searching for: {name}", icon_url=emojis.UNIVERSAL.url)
+            embeds.append(embed)
+
+        return embeds
+
+    @app_commands.command(name="list", description="Finds a list of ship ability names that contain the string")
+    @app_commands.describe(name="The name of the ship abilities to search for")
+    async def list(
+        self,
+        interaction: discord.Interaction,
+        name: str,
+    ):
+        await interaction.response.defer()
+        if type(interaction.channel) is DMChannel or type(interaction.channel) is PartialMessageable:
+            logger.info("{} requested ship ability list for '{}'", interaction.user.name, name)
+        else:
+            logger.info("{} requested ship ability list for '{}' in channel #{} of {}", interaction.user.name, name, interaction.channel.name, interaction.guild.name)
+        
+        rows = await self.fetch_ship_ability_list(name)
+        
+        if rows:
+            view = ItemView(await self.build_list_embed(rows, name))
+            try:
+                await view.start(interaction)
+            except discord.errors.HTTPException:
+                logger.info("List for '{}' too long, sending back error message", name)
+                embed = discord.Embed(description=f"Ship ability list for {name} too long! Try again with a more specific keyword.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
+                await interaction.followup.send(embed=embed)
+        else:
+            logger.info("Failed to find list for '{}'", name)
+            embed = discord.Embed(description=f"No ship abilities containing name {name} found.").set_author(name=f"Searching: {name}", icon_url=emojis.UNIVERSAL.url)
             await interaction.followup.send(embed=embed)
 
 async def setup(bot: TheBot):
