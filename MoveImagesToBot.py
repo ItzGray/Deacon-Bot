@@ -36,6 +36,7 @@ async def move_images_to_bot():
     player_worlddata = Archive.mmap("Player-WorldData.wad")
     root = Archive.mmap("Root.wad")
     shared_worlddata = Archive.mmap("_Shared-WorldData.wad")
+    ship_worlddata = Archive.mmap("Ship-WorldData.wad")
     de = BinDeserializer("types.json")
     async with aiosqlite.connect("items.db") as temp_db:
         db = await aiosqlite.connect(":memory:")
@@ -54,15 +55,23 @@ async def move_images_to_bot():
                 wad = mob_worlddata
             elif full_path.startswith("|Player|WorldData|"):
                 wad = player_worlddata
+            elif full_path.startswith("|Ship|WorldData|"):
+                wad = ship_worlddata
             path = full_path.split("|")[-1]
             try:
                 path = path.split("?")[0]
             except:
                 pass
+            fallback_already = False
             try:
                 data = wad[path]
             except:
-                data = root[path]
+                try:
+                    data = root[path]
+                except:
+                    fallback_already = True
+                    print("Failed to find file")
+                    continue
             if row[1] == "Image":
                 if path.split(".")[-1] == "tex":
                     deserialized_data = de.deserialize(data[4:])
@@ -73,6 +82,8 @@ async def move_images_to_bot():
                         wad = mob_worlddata
                     elif real_image_path.startswith("|Player|WorldData|"):
                         wad = player_worlddata
+                    elif real_image_path.startswith("|Ship|WorldData|"):
+                        wad = ship_worlddata
                     path = real_image_path.split("|")[-1]
                     try:
                         real_image_data = wad[path]
@@ -118,6 +129,8 @@ async def move_images_to_bot():
                         wad = mob_worlddata
                     elif image.startswith("|Player|WorldData|"):
                         wad = player_worlddata
+                    elif image.startswith("|Ship|WorldData|"):
+                        wad = ship_worlddata
                     path = image.split("|")[-1].split("?")[0]
                     try:
                         data = wad[path]
@@ -136,6 +149,8 @@ async def move_images_to_bot():
                             wad = mob_worlddata
                         elif real_image_path.startswith("|Player|WorldData|"):
                             wad = player_worlddata
+                        elif real_image_path.startswith("|Ship|WorldData|"):
+                            wad = ship_worlddata
                         path = real_image_path.split("|")[-1]
                         try:
                             real_image_data = wad[path]
