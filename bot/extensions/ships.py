@@ -147,7 +147,8 @@ class Ships(commands.GroupCog, name="ship"):
         for unit in ship_units:
             if unit[2] == "Unit":
                 units.append(await self.fetch_ship_unit(unit[3]))
-                boss = await database.translate_name(self.bot.db, units[-1][0][1])
+                if ship_title and ship_title != ship_name:
+                    boss = await database.translate_name(self.bot.db, units[-1][0][1])
             elif unit[2] == "Roster":
                 roster = await self.fetch_roster(unit[3])
                 for roster_unit in roster:
