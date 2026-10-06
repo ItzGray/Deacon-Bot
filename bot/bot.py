@@ -34,6 +34,21 @@ SELECT locale_en.data FROM units
 INNER JOIN locale_en ON locale_en.id == units.name
 """
 
+FIND_SHIP_NAME_QUERY = """
+SELECT locale_en.data FROM ships
+INNER JOIN locale_en ON locale_en.id == ships.name
+"""
+
+FIND_SHIP_ITEM_NAME_QUERY = """
+SELECT locale_en.data FROM ship_items
+INNER JOIN locale_en ON locale_en.id == ship_items.name
+"""
+
+FIND_SHIP_ABILITY_NAME_QUERY = """
+SELECT locale_en.data FROM ship_abilities
+INNER JOIN locale_en ON locale_en.id == ship_abilities.name
+"""
+
 class TheBot(commands.Bot):
     def __init__(self, db_path: Path, **kwargs):
         super().__init__(**kwargs)
@@ -46,6 +61,9 @@ class TheBot(commands.Bot):
         self.power_list = []
         self.talent_list = []
         self.unit_list = []
+        self.ship_list = []
+        self.ship_item_list = []
+        self.ship_ability_list = []
         self.uptime = datetime.now()
 
     async def on_ready(self):
@@ -94,6 +112,27 @@ class TheBot(commands.Bot):
         for i in tuple_unit_list:
             if i[0] not in self.unit_list:
                 self.unit_list.append(i[0])
+
+        async with self.db.execute(FIND_SHIP_NAME_QUERY) as cursor:
+            tuple_ship_list = await cursor.fetchall()
+
+        for i in tuple_ship_list:
+            if i[0] not in self.ship_list:
+                self.ship_list.append(i[0])
+
+        async with self.db.execute(FIND_SHIP_ITEM_NAME_QUERY) as cursor:
+            tuple_ship_item_list = await cursor.fetchall()
+
+        for i in tuple_ship_item_list:
+            if i[0] not in self.ship_item_list:
+                self.ship_item_list.append(i[0])
+
+        async with self.db.execute(FIND_SHIP_ABILITY_NAME_QUERY) as cursor:
+            tuple_ship_ability_list = await cursor.fetchall()
+
+        for i in tuple_ship_ability_list:
+            if i[0] not in self.ship_ability_list:
+                self.ship_ability_list.append(i[0])
 
         # Load required bot extensions.
         await self.load_extension("jishaku")
