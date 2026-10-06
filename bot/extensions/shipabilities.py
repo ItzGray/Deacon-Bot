@@ -81,7 +81,8 @@ class ShipAbilities(commands.GroupCog, name="shipability"):
 
         acc_cooldown_str = ""
         if close_accuracy == long_accuracy:
-            acc_cooldown_str += f"**{close_accuracy}% {emojis.SHIP_ACCURACY}**\n"
+            if close_accuracy <= 100:
+                acc_cooldown_str += f"**{close_accuracy}% {emojis.SHIP_ACCURACY}**\n"
         else:
             acc_cooldown_str += f"**Short Range: {close_accuracy}% {emojis.SHIP_ACCURACY}**\n**Long Range: {long_accuracy}% {emojis.SHIP_ACCURACY}**\n"
         acc_cooldown_str += f"**{cooldown} {emojis.TIMER}**\n"
@@ -110,6 +111,8 @@ class ShipAbilities(commands.GroupCog, name="shipability"):
                         lang_lookup = lang_lookup.replace(lang_lookup, f"{real_img}")
 
                 power_desc = power_desc.replace(f"&{desc_split}&", lang_lookup)
+
+        power_desc = power_desc.replace("$SHIP_MAX_SPEED_ICON$", f"{emojis.SHIP_MAX_SPEED}")
 
         embed = (
             discord.Embed(

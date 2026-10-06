@@ -114,6 +114,8 @@ SHIP_TURN_SPEED = PartialEmoji.from_str("<:sst_TURN:1413425561015029844>")
 
 SHIP_UNSINKABLE = PartialEmoji.from_str("<:ot_UNSINK:1556595194936172545>")
 
+SHIP_AOE = PartialEmoji.from_str("<:ot_SHAOE:1556856971494301816>")
+
 FIRE_1 = PartialEmoji.from_str("<:shz_FIR1:1556621531243749396>")
 FIRE_2 = PartialEmoji.from_str("<:shz_FIR2:1556621370744373321>")
 FIRE_3 = PartialEmoji.from_str("<:shz_FIR3:1556621414813925386>")

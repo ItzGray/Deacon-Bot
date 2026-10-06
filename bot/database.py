@@ -25,11 +25,26 @@ _ORIGIN_COLORS = {
     None: discord.Color.greyple(),
     "All": discord.Color.greyple(),
     "Raft": discord.Color.from_str("#794d07"),
+    "Pirate": discord.Color.from_str("#ac5e00"),
     "Monquistador": discord.Color.from_str("#919100"),
     "Cool Ranch": discord.Color.orange(),
+    "Bison": discord.Color.orange(),
     "Samoorai": discord.Color.red(),
     "Royal Navy": discord.Color.dark_blue(),
-    "Eagle": discord.Color.yellow()
+    "Eagle": discord.Color.yellow(),
+    "Ghost": discord.Color.dark_green(),
+    "Haunted Galleon": discord.Color.green(),
+    "Beluga": discord.Color.from_str("#fe6646"),
+    "ASUS": discord.Color.dark_red(),
+    "Club 3D": discord.Color.dark_red(),
+    "Gigabyte": discord.Color.dark_red(),
+    "MSI": discord.Color.dark_red(),
+    "TUL": discord.Color.dark_red(),
+    "VisionTek": discord.Color.dark_red(),
+    "Diamond": discord.Color.dark_red(),
+    "HIS": discord.Color.dark_red(),
+    "Sapphire": discord.Color.dark_red(),
+    "XFX": discord.Color.dark_red(),
 }
 
 _SCHOOLS = [
@@ -154,7 +169,8 @@ _SHIP_STATS = {
     "Max Hull Integrity": SHIP_HEALTH,
     "Hull Repair Rate": SHIP_REPAIR_RATE,
     "Maximum Speed": SHIP_MAX_SPEED,
-    "Turning Speed": SHIP_TURN_SPEED
+    "Turning Speed": SHIP_TURN_SPEED,
+    "Acceleration": SHIP_MAX_SPEED,
 }
 
 _WEAPON_TYPES = [
@@ -249,6 +265,10 @@ _IMG_ICONS = {
     "Icon_BS_Trap_01_Med": TRAP_1,
     "Icon_BS_Trap_02_Med": TRAP_2,
     "Icon_BS_Trap_03_Med": TRAP_3,
+    "Icon_Attribute_Health": HEALTH,
+    "Icon_Attribute_Accuracy": ACCURACY,
+    "Icon_Attribute_Dodge": DODGE,
+    "Icon_AoE_Med": SHIP_AOE,
 }
 
 _DOT_ICONS = {
