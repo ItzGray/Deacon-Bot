@@ -23,6 +23,13 @@ HELP_DESCRIPTION = """
 **/talent list**: Finds a list of talents containing a given string. Parameters: Name, Ranks\n
 **/power find**: Finds the power as shown in the files. Parameters: Name\n
 **/power list**: Finds a list of powers containing a given string. Parameters: Name\n
+**/ship find**: Finds the ship as shown in the files. Parameters: Name\n
+**/ship list**: Finds a list of ships containing a given string. Parameters: Name\n
+**/shipitem find**: Finds the ship item as shown in the files. Parameters: Name, Origin, Kind, Level\n
+**/shipitem list**: Finds a list of ship items containing a given string. Parameters: Name, Origin, Kind, Level\n
+**/shipitem abilitysearch**: Searches for ship items that have a given ability. Parameters: Name, Origin, Kind, Level\n
+**/shipability find**: Finds the ship ability as shown in the files. Parameters: Name\n
+**/shipability list**: Finds a list of ship abilities containing a given string. Parameters: Name\n
 **/secret now**: Finds the current secret trainer.\n
 **/secret type**: Prints the day's schedule for a single secret trainer. Parameters: Trainer\n
 """
